@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8896350b4ff419d4e9597ea05c7aff9b, type: 3}
+  m_Name: 01 ) Test Enemy
+  m_EditorClassIdentifier: 
+  ID: 0
+  name: Test Devil
+  level: 1
+  speed: 1
+  unitPrefab: {fileID: 367893846692865104, guid: a941c5857cca6144ea13cbc5ad5aeabc, type: 3}
