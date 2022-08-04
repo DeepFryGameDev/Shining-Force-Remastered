@@ -46,7 +46,7 @@ namespace DeepFry
 
         void FindNearestTarget()
         {
-            GameObject[] targets = GameObject.FindGameObjectsWithTag("Player");
+            GameObject[] targets = GameObject.FindGameObjectsWithTag("PlayerUnit");
 
             GameObject nearest = null;
             float distance = Mathf.Infinity;

@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AI;
 
 namespace DeepFry
 {
@@ -34,11 +35,15 @@ namespace DeepFry
 
         public Tile actualTargetTile;
 
+        NavMeshAgent agent;
+
         public void Init()
         {
             tiles = GameObject.FindGameObjectsWithTag("Tile");
 
             halfHeight = GetComponent<Collider>().bounds.extents.y;
+
+            agent = GetComponent<NavMeshAgent>();
 
             //TurnManager.AddUnit(this);
         }
@@ -339,6 +344,7 @@ namespace DeepFry
                     actualTargetTile = FindEndTile(t);
 
                     // Move enemy to actualTargetTile's position with navmesh
+                    StartCoroutine(MoveUnit());
 
                     return;
                 }
@@ -378,14 +384,36 @@ namespace DeepFry
             Debug.Log("Path not found");
         }
 
-        public void BeginTurn()
+        IEnumerator MoveUnit()
         {
-            turn = true;
+            Vector3 navMeshTargetPos = new Vector3(actualTargetTile.transform.position.x, 0, actualTargetTile.transform.position.z);
+
+            GetComponent<Animator>().SetBool("flyForward", true);
+
+            agent.SetDestination(navMeshTargetPos);
+
+            while (Vector3.Distance(transform.position, navMeshTargetPos) > 0.1f)
+            {
+                //Debug.Log("Distance: " + Vector3.Distance(transform.position, navMeshTargetPos));
+                yield return new WaitForEndOfFrame();
+            }
+
+            Debug.Log("Stopping");
+            GetComponent<Animator>().SetBool("flyForward", false);
+            agent.isStopped = true;
+            agent.ResetPath();
+
+            transform.position = navMeshTargetPos;
+
+            PostMove();
         }
 
-        public void EndTurn()
+        void PostMove()
         {
-            turn = false;
+            // Check if targets in range
+
+            // If not, skip turn.
+            GameObject.FindObjectOfType<BattleStateMachine>().SetBattleState(battleStates.ENDTURN);
         }
     }
 

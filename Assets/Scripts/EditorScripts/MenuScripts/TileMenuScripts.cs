@@ -2,6 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
+using TMPro;
+using UnityEngine.AI;
 
 namespace DeepFry
 {
@@ -26,7 +28,36 @@ namespace DeepFry
 
             foreach (GameObject t in tiles)
             {
-                t.name = "Tile (" + t.transform.position.x + ", " + t.transform.position.z + ")";
+                t.name = "Tile (" + t.transform.position.z + ", " + t.transform.position.x + ")";
+            }
+        }
+
+        [MenuItem("DeepFryTools/Tile/Set Tile Coordinates Helper Text")]
+        public static void SetTileCoordinates()
+        {
+            GameObject[] tiles = GameObject.FindGameObjectsWithTag("Tile");
+
+            foreach (GameObject t in tiles)
+            {
+                t.transform.GetChild(0).GetChild(0).GetComponent<TMP_Text>().text = "(" + t.transform.position.z + ", " + t.transform.position.x + ")";
+            }
+        }
+
+        [MenuItem("DeepFryTools/Tile/Set NavMesh Obstacles")]
+        public static void SetNavMeshObstacles()
+        {
+            GameObject[] tiles = GameObject.FindGameObjectsWithTag("Tile");
+
+            foreach (GameObject t in tiles)
+            {
+                NavMeshObstacle obstacle = t.GetComponent<NavMeshObstacle>();
+                if (t.GetComponent<Tile>().walkable)
+                {
+                    obstacle.enabled = false;
+                } else
+                {
+                    obstacle.enabled = true;
+                }
             }
         }
     }

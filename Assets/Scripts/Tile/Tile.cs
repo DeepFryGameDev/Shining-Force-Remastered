@@ -11,6 +11,12 @@ namespace DeepFry
         public bool target = false;
         public bool selectable = false;
 
+        GameObject wall;
+
+        //For colors
+        float curAlpha;
+        Color currentTileColor, targetTileColor, selectableTileColor, naTileColor;
+
         public List<Tile> adjacencyList = new List<Tile>();
 
         //Needed BFS (breadth first search)
@@ -26,27 +32,34 @@ namespace DeepFry
         // Use this for initialization
         void Start()
         {
+            curAlpha = GetComponent<Renderer>().materials[0].color.a;
+            selectableTileColor = new Color(1, 1, 1, curAlpha);
+            naTileColor = new Color(1, 1, 1, 0);
 
+            wall = transform.Find("Wall").gameObject;
         }
 
         // Update is called once per frame
         void Update()
         {
-            if (current)
+            if (!walkable)
             {
-                GetComponent<Renderer>().material.color = Color.magenta;
-            }
-            else if (target)
-            {
-                GetComponent<Renderer>().material.color = Color.green;
+                GetComponent<Renderer>().materials[0].color = naTileColor;
+                GetComponent<Animator>().SetBool("selectable", false);
+                wall.SetActive(true);
             }
             else if (selectable)
             {
-                GetComponent<Renderer>().material.color = Color.red;
+                GetComponent<Animator>().SetBool("selectable", false);
+                GetComponent<Renderer>().materials[0].color = selectableTileColor;
+                GetComponent<Animator>().SetBool("selectable", true);
+                wall.SetActive(false);
             }
             else
             {
-                GetComponent<Renderer>().material.color = Color.white;
+                GetComponent<Renderer>().materials[0].color = naTileColor;
+                GetComponent<Animator>().SetBool("selectable", false);
+                wall.SetActive(true);
             }
         }
 

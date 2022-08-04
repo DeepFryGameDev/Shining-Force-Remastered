@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: 01 ) Test Enemy
   m_EditorClassIdentifier: 
   ID: 0
-  name: Test Devil
+  name: Test Gizmo
   level: 1
   speed: 1
-  unitPrefab: {fileID: 367893846692865104, guid: a941c5857cca6144ea13cbc5ad5aeabc, type: 3}
+  unitPrefab: {fileID: 1329046361559213541, guid: 3802fc189f004c641a543f5cbc290b98, type: 3}

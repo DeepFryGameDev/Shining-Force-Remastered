@@ -12,7 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 918ed05164fafaf4fbd4946a8c2ad59c, type: 3}
   m_Name: BowieTestUnit
   m_EditorClassIdentifier: 
+  ID: 0
   name: Bowie Lol
   level: 1
   speed: 2
-  unitPrefab: {fileID: 2484615266159254150, guid: 53e168e4e164d7346bb69ce732e2b52c, type: 3}
+  unitPrefab: {fileID: 845501013087777604, guid: 3c5a0a815ab5e114d921120f4f8bc285, type: 3}

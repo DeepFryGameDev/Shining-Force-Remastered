@@ -10,7 +10,7 @@ namespace DeepFry
 
         void Update()
         {
-            GetInput();
+            //GetInput();
         }
 
         void GetInput()

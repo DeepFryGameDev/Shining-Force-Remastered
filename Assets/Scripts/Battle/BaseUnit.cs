@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 namespace DeepFry
@@ -24,5 +25,12 @@ namespace DeepFry
         public void SetUnitObject(GameObject obj) { unitObject = obj; }
 
         public GameObject GetUnitObject() { return unitObject; }
+
+        public IEnumerator ResetAnimator()
+        {
+            unitObject.GetComponent<Animator>().enabled = false;
+            yield return new WaitForSeconds(0.05f);
+            unitObject.GetComponent<Animator>().enabled = true;
+        }
     }
 }
