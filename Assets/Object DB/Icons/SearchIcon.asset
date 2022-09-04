@@ -12,5 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: faa67f3a83b833a418dc47b267dd5c66, type: 3}
   m_Name: SearchIcon
   m_EditorClassIdentifier: 
-  sprites:
-  - {fileID: 21300000, guid: 8ecbaae71f5cb3147af59b6b6d0be4bf, type: 3}
+  commandName: Search
+  defaultIcon: {fileID: 0}
+  hoveredIcon: {fileID: 0}

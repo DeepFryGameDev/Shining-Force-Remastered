@@ -12,5 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: faa67f3a83b833a418dc47b267dd5c66, type: 3}
   m_Name: ItemIcon
   m_EditorClassIdentifier: 
+  commandName: Items
   defaultIcon: {fileID: 21300000, guid: bc496efa6f3863c49bf6fc9933097cfc, type: 3}
   hoveredIcon: {fileID: 21300000, guid: 405421ec6026a804882d453889b779e1, type: 3}

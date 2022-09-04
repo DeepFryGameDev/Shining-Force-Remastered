@@ -1,5 +1,7 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -7,19 +9,27 @@ namespace DeepFry
 {
     public class TacticsMove : MonoBehaviour
     {
+        protected float tileStoppingDistance = 0.1f;
+
         public bool turn = false;
 
         List<Tile> selectableTiles = new List<Tile>();
+        public List<Tile> tempSelectableTiles = new List<Tile>();
+
         GameObject[] tiles;
 
         Stack<Tile> path = new Stack<Tile>();
-        Tile currentTile;
+        public Tile currentTile;
 
         public bool moving = false;
         public int move = 5;
         public float jumpHeight = 2;
         public float moveSpeed = 2;
         public float jumpVelocity = 4.5f;
+
+        public BaseUnit unit;
+
+        public Tile lastTile;
 
         Vector3 velocity = new Vector3();
         Vector3 heading = new Vector3();
@@ -31,11 +41,16 @@ namespace DeepFry
         bool movingEdge = false;
         Vector3 jumpTarget;
 
-        int tileLayer = 1 << 6;
+        public int tileLayer = 1 << 6;
 
         public Tile actualTargetTile;
 
-        NavMeshAgent agent;
+        List<Tile> pathToTargetTile = new List<Tile>();
+
+        protected NavMeshAgent agent;
+        protected Animator anim;
+
+        BattleStateMachine bsm;
 
         public void Init()
         {
@@ -44,6 +59,10 @@ namespace DeepFry
             halfHeight = GetComponent<Collider>().bounds.extents.y;
 
             agent = GetComponent<NavMeshAgent>();
+
+            anim = GetComponent<Animator>();
+
+            bsm = FindObjectOfType<BattleStateMachine>();
 
             //TurnManager.AddUnit(this);
         }
@@ -79,6 +98,20 @@ namespace DeepFry
             }
         }
 
+        public void ComputeAdjacencyListsForTargetTile(float jumpHeight, Tile target)
+        {
+            //tiles = GameObject.FindGameObjectsWithTag("Tile");
+           
+            foreach (GameObject tile in tiles)
+            {
+                Tile t = tile.GetComponent<Tile>();
+                if (t.selectable)
+                {
+                    t.FindNeighborsForTarget(jumpHeight, target);
+                }                
+            }
+        }
+
         public void FindSelectableTiles()
         {
             ComputeAdjacencyLists(jumpHeight, null);
@@ -86,16 +119,39 @@ namespace DeepFry
 
             Queue<Tile> process = new Queue<Tile>();
 
+            /*
             process.Enqueue(currentTile);
             currentTile.visited = true;
+
+            if (lastTile != null)
+            {
+                process.Enqueue(lastTile);
+                currentTile.visited = true;
+                currentTile.selectable = true;
+            } else
+            {
+                process.Enqueue(currentTile);
+                currentTile.visited = true;
+            }
+
+            */
+
+            process.Enqueue(currentTile);
+            currentTile.visited = true;
+            currentTile.selectable = true;
+
             //currentTile.parent = ??  leave as null 
 
             while (process.Count > 0)
             {
                 Tile t = process.Dequeue();
-
                 selectableTiles.Add(t);
                 t.selectable = true;
+
+                t.GetComponent<LandEffect>().SetMultipliers(unit);
+
+                float tempMove = move - (t.distance * t.GetComponent<LandEffect>().GetMovementMultiplier());
+                //Debug.Log("tempMove for " + t.gameObject.name + ": " + tempMove);
 
                 if (t.distance < move)
                 {
@@ -110,57 +166,39 @@ namespace DeepFry
                         }
                     }
                 }
+
+                /*if (t.distance < move)
+                {
+                    foreach (Tile tile in t.adjacencyList)
+                    {
+                        if (!tile.visited)
+                        {
+                            tile.parent = t;
+                            tile.visited = true;
+                            tile.distance = 1 + t.distance;
+                            process.Enqueue(tile);
+                        }
+                    }
+                }*/
+            }
+
+            foreach (Tile t in selectableTiles)
+            {
+                CheckPath(t);
             }
         }
 
-        public void Move()
+        public void SetLastTile()
         {
-            if (path.Count > 0)
-            {
-                Tile t = path.Peek();
-                Vector3 target = t.transform.position;
+            GetCurrentTile();
+            lastTile = currentTile;
+        }       
 
-                //Calculate the unit's position on top of the target tile
-                target.y += halfHeight + t.GetComponent<Collider>().bounds.extents.y;
-
-                if (Vector3.Distance(transform.position, target) >= 0.05f)
-                {
-                    bool jump = transform.position.y != target.y;
-
-                    if (jump)
-                    {
-                        Jump(target);
-                    }
-                    else
-                    {
-                        CalculateHeading(target);
-                        SetHorizotalVelocity();
-                    }
-
-                    //Locomotion
-                    transform.forward = heading;
-                    transform.position += velocity * Time.deltaTime;
-                }
-                else
-                {
-                    //Tile center reached
-                    transform.position = target;
-                    path.Pop();
-                }
-            }
-            else
-            {
-                RemoveSelectableTiles();
-                moving = false;
-
-                //TurnManager.EndTurn();
-            }
-        }
-
-        protected void RemoveSelectableTiles()
+        public void RemoveSelectableTiles()
         {
             if (currentTile != null)
             {
+                currentTile.selectable = false;
                 currentTile.current = false;
                 currentTile = null;
             }
@@ -320,7 +358,7 @@ namespace DeepFry
             return endTile;
         }
 
-        protected void FindPath(Tile target)
+        protected void FindPath(Tile target) // enemy usage
         {
             ComputeAdjacencyLists(jumpHeight, target);
             GetCurrentTile();
@@ -343,8 +381,10 @@ namespace DeepFry
                 {
                     actualTargetTile = FindEndTile(t);
 
+                    //UpdateTileMovementRating(actualTargetTile);
+
                     // Move enemy to actualTargetTile's position with navmesh
-                    StartCoroutine(MoveUnit());
+                    //StartCoroutine(MoveEnemyUnit(actualTargetTile));
 
                     return;
                 }
@@ -384,36 +424,135 @@ namespace DeepFry
             Debug.Log("Path not found");
         }
 
-        IEnumerator MoveUnit()
+        protected void CheckPath(Tile target) // player usage
         {
-            Vector3 navMeshTargetPos = new Vector3(actualTargetTile.transform.position.x, 0, actualTargetTile.transform.position.z);
+            pathToTargetTile.Clear();
 
-            GetComponent<Animator>().SetBool("flyForward", true);
+            //Debug.Log("Finding path from " + bsm.lastTile.gameObject.name + " to " + target.gameObject.name);
 
-            agent.SetDestination(navMeshTargetPos);
+            ComputeAdjacencyListsForTargetTile(jumpHeight, target);
 
-            while (Vector3.Distance(transform.position, navMeshTargetPos) > 0.1f)
+            List<Tile> openList = new List<Tile>(); //any tile that has not been processed
+            List<Tile> closedList = new List<Tile>(); //any tile that has been processed
+                                                      //when the target tile is added to the closedList, we have found the closest path to the target tile
+
+            openList.Add(bsm.lastTile);
+            //currentTile.parent = ??
+            bsm.lastTile.h = Vector3.Distance(bsm.lastTile.transform.position, target.transform.position);
+            bsm.lastTile.f = bsm.lastTile.h;
+
+            while (openList.Count > 0)
             {
-                //Debug.Log("Distance: " + Vector3.Distance(transform.position, navMeshTargetPos));
-                yield return new WaitForEndOfFrame();
+                Tile t = FindLowestF(openList);
+                //Debug.Log("1: " + t.gameObject.name);
+                closedList.Add(t);
+                foreach (Tile tile in closedList)
+                {
+                    //Debug.Log(tile.gameObject.name);
+                }
+                //Debug.Log("t: " + t.gameObject.name);
+                //Debug.Log("target: " + target.gameObject.name);
+                if (t == target)
+                {
+                    //Debug.Log("if t == target: true");
+
+                    //actualTargetTile = FindEndTile(t);
+
+                    //UpdateTileMovementRating(actualTargetTile);
+
+                    UpdateTileMovementRating(target);
+
+                    //Debug.Log("actual target file: " + actualTargetTile.gameObject.name);
+                    return;
+                }
+
+                foreach (Tile tile in t.adjacencyList)
+                {
+                    //Debug.Log("in foreach loop: " + tile.gameObject.name);
+                    if (closedList.Contains(tile))
+                    {
+                        //Debug.Log("do nothing");
+                        //do nothing, already processed
+                    }
+                    else if (openList.Contains(tile))
+                    {
+                        //Debug.Log("if openlist contains tile in adjecency list");
+                        float tempG = t.g + Vector3.Distance(tile.transform.position, t.transform.position);
+                        if (tempG < tile.g) //found quicker way to target
+                        {
+                            //Debug.Log("tempG < tile.g");
+                            tile.parent = t;
+
+                            tile.g = tempG;
+                            tile.f = tile.g + tile.h;
+                        }
+                    }
+                    else //never processed the tile
+                    {
+                        //Debug.Log("never processed " + tile.gameObject.name);
+                        tile.parent = t;
+
+                        tile.g = t.g + Vector3.Distance(tile.transform.position, t.transform.position);
+                        tile.h = Vector3.Distance(tile.transform.position, target.transform.position);
+                        tile.f = tile.g + tile.h;
+
+                        openList.Add(tile);
+                        //Debug.Log("added to openList: " + tile.gameObject.name);
+                    }
+                }
+
             }
 
-            Debug.Log("Stopping");
-            GetComponent<Animator>().SetBool("flyForward", false);
-            agent.isStopped = true;
-            agent.ResetPath();
-
-            transform.position = navMeshTargetPos;
-
-            PostMove();
+            //todo: what do you do if there is no path to the target tile?  Likely just skip turn I'm thinking
+            Debug.Log("Path not found");
         }
 
-        void PostMove()
+        private void UpdateTileMovementRating(Tile targetTile)
         {
-            // Check if targets in range
+            List<Tile> pathTiles = new List<Tile>();
 
-            // If not, skip turn.
-            GameObject.FindObjectOfType<BattleStateMachine>().SetBattleState(battleStates.ENDTURN);
+            path.Clear();
+            Tile next = targetTile;
+            while (next != null)
+            {
+                path.Push(next);
+
+                if (!pathTiles.Contains(next))
+                {
+                    pathTiles.Add(next);
+                    next = next.parent;
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            // Movement should start at unit's Move var
+            // for each tile in the path, 1 movement point should be reduced.  This value is multiplied by the tile's movement rating.
+            // if the overall value is still above 0, the tile can be reached.  If the value is lower than 0, the tile should be marked as 'selectable=false'.
+
+            float movePoints = (float)move;
+
+            foreach (Tile t in pathTiles)
+            {
+                movePoints -= (1 * t.GetComponent<LandEffect>().GetMovementMultiplier());
+            }
+
+            if (movePoints >= 0)
+            {
+                //Debug.Log("Can move to " + targetTile.gameObject.name);
+
+                if (!tempSelectableTiles.Contains(targetTile))
+                {
+                    tempSelectableTiles.Add(targetTile);
+                }
+            }
+            else
+            {
+                //Debug.Log("Cannot move to " + targetTile.gameObject.name);
+                targetTile.selectable = false;
+            }
         }
     }
 

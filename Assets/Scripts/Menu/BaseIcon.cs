@@ -8,6 +8,7 @@ namespace DeepFry
 
     public class BaseIcon : ScriptableObject
     {
+        public string commandName;
         public Sprite defaultIcon, hoveredIcon;
     }
 }

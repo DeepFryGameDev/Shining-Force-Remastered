@@ -6,11 +6,15 @@ public class PlayerUnitSO : ScriptableObject
 {
     public int ID;
     public new string name;
-    public int level;
 
-    public float speed;
+    public unitRaces unitRace;
 
-    public GameObject unitPrefab;
+    public int exp, maxExp, level;
+
+    public int HP, maxHP, MP, maxMP;
+    public int attack, defense, agility, move;
+
+    public GameObject unitPrefab;    
 
     public BasePlayerUnit GetPlayerUnit()
     {
@@ -20,10 +24,22 @@ public class PlayerUnitSO : ScriptableObject
         playerUnit.unitType = unitTypes.PLAYER;
 
         playerUnit.level = level;
+        playerUnit.exp = exp;
+        playerUnit.maxExp = maxExp;
 
-        playerUnit.speed = speed;
+        playerUnit.HP = HP;
+        playerUnit.MP = MP;
+        playerUnit.maxHP = maxHP;
+        playerUnit.maxMP = maxMP;
+
+        playerUnit.attack = attack;
+        playerUnit.defense = defense;
+        playerUnit.agility = agility;
+        playerUnit.move = move;
 
         playerUnit.unitPrefab = unitPrefab;
+
+        playerUnit.unitRace = unitRace;
 
         return playerUnit;
     }

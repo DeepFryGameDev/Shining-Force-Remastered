@@ -9,14 +9,22 @@ namespace DeepFry
         ENEMY
     }
 
+    public enum unitRaces
+    {
+        HUMAN,
+        CENTAUR,
+        DEMON
+    }
+
     public class BaseUnit
     {
         public string name;
         public int ID;
         public unitTypes unitType;
-        public int level;
+        public unitRaces unitRace;
 
-        public float speed;
+        public int HP, maxHP, MP, maxMP;
+        public int attack, defense, agility, move;
 
         public GameObject unitPrefab;
 

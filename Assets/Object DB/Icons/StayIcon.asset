@@ -12,5 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: faa67f3a83b833a418dc47b267dd5c66, type: 3}
   m_Name: StayIcon
   m_EditorClassIdentifier: 
+  commandName: Stay
   defaultIcon: {fileID: 21300000, guid: b519620b9554b23429ee7d845992ba7f, type: 3}
   hoveredIcon: {fileID: 21300000, guid: ec3a3c3b5ada7484cb8300e6d87d200e, type: 3}

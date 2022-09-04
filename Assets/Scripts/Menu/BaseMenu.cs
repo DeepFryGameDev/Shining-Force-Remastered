@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -21,7 +22,7 @@ namespace DeepFry
         public Sprite[] itemMenuIcons;
         public Sprite[] magicMenuIcons;
 
-        public turnStates turnState;
+        //public turnStates turnState;
         public menuStates menuState;
 
         public GameObject topButton, rightButton, bottomButton, leftButton;
@@ -31,17 +32,24 @@ namespace DeepFry
         public GameObject hoveredButton;
         BattleStateMachine bsm;
 
+        BattleCamera batCam;
+
+        TMP_Text commandNameText;
+
         private void Awake()
         {
             bsm = FindObjectOfType<BattleStateMachine>();
+            batCam = FindObjectOfType<BattleCamera>();
 
-            turnState = turnStates.IDLE;
+            //turnState = turnStates.IDLE;
             menuState = menuStates.IDLE;
 
             topButton = transform.Find("MenuPanel/TopButton").gameObject;
             rightButton = transform.Find("MenuPanel/RightButton").gameObject;
             bottomButton = transform.Find("MenuPanel/BottomButton").gameObject;
             leftButton = transform.Find("MenuPanel/LeftButton").gameObject;
+
+            commandNameText = GameObject.Find("Menu/TextBG/MenuText").GetComponent<TMP_Text>();
         }
 
         public void SetHovered(GameObject menuButton)
@@ -62,14 +70,17 @@ namespace DeepFry
         // Update is called once per frame
         void Update()
         {
-            switch (turnState)
+            switch (bsm.turnState)
             {
                 case turnStates.IDLE:
-                    // hide menu
-                    HideMenu();
+
+                    break;
+
+                case turnStates.MOVE:
 
                     break;
                 case turnStates.MENU:
+
                     // draw menu
                     ShowMenu();
 
@@ -77,6 +88,20 @@ namespace DeepFry
                     {
                         Invoke(hoveredButton.GetComponent<MenuIconBehavior>().commandMethod, 0f);
                     }
+
+                    if (Input.GetKeyDown("c"))
+                    {
+                        Debug.Log("Go back");
+                        HideMenu();
+
+                        commandNameText.text = "";
+                    }
+
+                    break;
+
+                case turnStates.SELECT:
+
+                    
 
                     break;
             }
@@ -114,7 +139,11 @@ namespace DeepFry
 
                 menuDrawn = false;
 
-                turnState = turnStates.IDLE;
+                topButton.GetComponent<MenuIconBehavior>().hovered = false;
+                rightButton.GetComponent<MenuIconBehavior>().hovered = false;
+                bottomButton.GetComponent<MenuIconBehavior>().hovered = false;
+                leftButton.GetComponent<MenuIconBehavior>().hovered = false;
+
             }
         }
 
@@ -128,6 +157,9 @@ namespace DeepFry
 
                 // play open menu animation
                 GetComponent<Animator>().SetBool("menuOpened", true);
+
+                GameObject.Find("Menu/TextBG/MenuText").GetComponent<TMP_Text>().text = mainMenuIcons[2].commandName;
+                bottomButton.GetComponent<MenuIconBehavior>().hovered = true;
             }
         }
 
@@ -139,10 +171,10 @@ namespace DeepFry
             bottomButton.transform.Find("Icon").GetComponent<Image>().sprite = mainMenuIcons[2].defaultIcon;
             leftButton.transform.Find("Icon").GetComponent<Image>().sprite = mainMenuIcons[3].defaultIcon;
 
-            topButton.GetComponent<MenuIconBehavior>().SetIcons(mainMenuIcons[0].defaultIcon, mainMenuIcons[0].hoveredIcon);
-            rightButton.GetComponent<MenuIconBehavior>().SetIcons(mainMenuIcons[1].defaultIcon, mainMenuIcons[1].hoveredIcon);
-            bottomButton.GetComponent<MenuIconBehavior>().SetIcons(mainMenuIcons[2].defaultIcon, mainMenuIcons[2].hoveredIcon);
-            leftButton.GetComponent<MenuIconBehavior>().SetIcons(mainMenuIcons[3].defaultIcon, mainMenuIcons[3].hoveredIcon);
+            topButton.GetComponent<MenuIconBehavior>().SetCommand(mainMenuIcons[0].commandName, mainMenuIcons[0].defaultIcon, mainMenuIcons[0].hoveredIcon);
+            rightButton.GetComponent<MenuIconBehavior>().SetCommand(mainMenuIcons[1].commandName, mainMenuIcons[1].defaultIcon, mainMenuIcons[1].hoveredIcon);
+            bottomButton.GetComponent<MenuIconBehavior>().SetCommand(mainMenuIcons[2].commandName, mainMenuIcons[2].defaultIcon, mainMenuIcons[2].hoveredIcon);
+            leftButton.GetComponent<MenuIconBehavior>().SetCommand(mainMenuIcons[3].commandName, mainMenuIcons[3].defaultIcon, mainMenuIcons[3].hoveredIcon);
 
             topButton.GetComponent<MenuIconBehavior>().commandMethod = "AttackButtonPressed";
             rightButton.GetComponent<MenuIconBehavior>().commandMethod = "ItemButtonPressed";
@@ -179,7 +211,13 @@ namespace DeepFry
         void EndTurn()
         {
             HideMenu();
+
+            commandNameText.text = "";
+
+            batCam.cameraMode = CameraModes.IDLE;
+
             bsm.battleState = battleStates.ENDTURN;
+            bsm.turnState = turnStates.IDLE;
         }
     }
 }

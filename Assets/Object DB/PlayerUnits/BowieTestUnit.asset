@@ -14,6 +14,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ID: 0
   name: Bowie Lol
+  exp: 0
+  maxExp: 0
   level: 1
-  speed: 2
+  HP: 12
+  maxHP: 12
+  MP: 8
+  maxMP: 8
+  attack: 9
+  defense: 4
+  agility: 6
+  move: 6
   unitPrefab: {fileID: 845501013087777604, guid: 3c5a0a815ab5e114d921120f4f8bc285, type: 3}

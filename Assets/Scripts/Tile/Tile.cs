@@ -88,6 +88,14 @@ namespace DeepFry
             CheckTile(-Vector3.right, jumpHeight, target);
         }
 
+        public void FindNeighborsForTarget(float jumpHeight, Tile target)
+        {
+            CheckTile(Vector3.forward, jumpHeight, target);
+            CheckTile(-Vector3.forward, jumpHeight, target);
+            CheckTile(Vector3.right, jumpHeight, target);
+            CheckTile(-Vector3.right, jumpHeight, target);
+        }
+
         public void CheckTile(Vector3 direction, float jumpHeight, Tile target)
         {
             Vector3 halfExtents = new Vector3(0.25f, (1 + jumpHeight) / 2.0f, 0.25f);

@@ -7,6 +7,8 @@ namespace DeepFry
 {
     public class EnemyTacticsMove : TacticsMove
     {
+        public BaseEnemyUnit enemyUnit;
+
         GameObject target;
 
         // Start is called before the first frame update
@@ -33,15 +35,20 @@ namespace DeepFry
         public void SetActualTargetTile()
         {
             FindNearestTarget();
-            CalculatePath();
             FindSelectableTiles();
+            CalculatePath();
+            //FindSelectableTiles();
             //actualTargetTile.target = true;
+
+            StartCoroutine(MoveUnit(actualTargetTile));
         }
 
         void CalculatePath()
         {
             Tile targetTile = GetTargetTile(target);
             FindPath(targetTile);
+
+            CheckPath(actualTargetTile);
         }
 
         void FindNearestTarget()
@@ -64,6 +71,39 @@ namespace DeepFry
             }
 
             target = nearest;
+        }
+
+        IEnumerator MoveUnit(Tile tarTile)
+        {
+            Vector3 navMeshTargetPos = new Vector3(tarTile.transform.position.x, 0, tarTile.transform.position.z);
+
+            anim.SetBool("flyForward", true);
+
+            agent.SetDestination(navMeshTargetPos);
+
+            while (Vector3.Distance(transform.position, navMeshTargetPos) > tileStoppingDistance)
+            {
+                //Debug.Log("Distance: " + Vector3.Distance(transform.position, navMeshTargetPos));
+                yield return new WaitForEndOfFrame();
+            }
+
+            Debug.Log("Stopping");
+            anim.SetBool("flyForward", false);
+            agent.isStopped = true;
+            agent.velocity = new Vector3(0, 0, 0);
+            agent.ResetPath();
+
+            transform.position = new Vector3(navMeshTargetPos.x, transform.position.y, navMeshTargetPos.z);
+
+            PostMove();
+        }
+
+        void PostMove()
+        {
+            // Check if targets in range
+
+            // If not, skip turn.
+            GameObject.FindObjectOfType<BattleStateMachine>().SetBattleState(battleStates.ENDTURN);
         }
     }
 }

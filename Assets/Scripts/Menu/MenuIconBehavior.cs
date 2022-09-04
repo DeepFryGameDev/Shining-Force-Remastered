@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -21,10 +22,15 @@ namespace DeepFry
 
         Image iconImage;
 
+        TMP_Text commandNameText;
+        string commandName;
+
         // Start is called before the first frame update
         void Start()
         {
             iconImage = transform.Find("Icon").GetComponent<Image>();
+
+            commandNameText = GameObject.Find("Menu/TextBG/MenuText").GetComponent<TMP_Text>();
         }
 
         // Update is called once per frame
@@ -33,6 +39,9 @@ namespace DeepFry
             if (hovered && !started)
             {
                 started = true;
+
+                commandNameText.text = commandName;
+
                 StartCoroutine(AnimateIcon());
             } else
             {
@@ -81,8 +90,9 @@ namespace DeepFry
             timeElapsed = 0;
         }
 
-        public void SetIcons(Sprite defIcon, Sprite hovIcon)
+        public void SetCommand(string cmdName, Sprite defIcon, Sprite hovIcon)
         {
+            commandName = cmdName;
             defaultIcon = defIcon;
             hoveredIcon = hovIcon;
         }

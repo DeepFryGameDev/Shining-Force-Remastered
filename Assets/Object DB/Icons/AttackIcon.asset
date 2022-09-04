@@ -12,5 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: faa67f3a83b833a418dc47b267dd5c66, type: 3}
   m_Name: AttackIcon
   m_EditorClassIdentifier: 
+  commandName: Attack
   defaultIcon: {fileID: 21300000, guid: f71196019a9d03d42b0a2512b93eb19f, type: 3}
   hoveredIcon: {fileID: 21300000, guid: c58de58eb1c60e64aad4510c6d7ad4ca, type: 3}
