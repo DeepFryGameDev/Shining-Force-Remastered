@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 918ed05164fafaf4fbd4946a8c2ad59c, type: 3}
+  m_Name: SarahTestUnit
+  m_EditorClassIdentifier: 
+  ID: 1
+  name: Sarah
+  unitRace: 0
+  exp: 0
+  maxExp: 0
+  level: 1
+  unitClass: 1
+  learnedMagic:
+  - {fileID: 11400000, guid: bb3dbdf82e284cb41a65896bb69bf54a, type: 2}
+  inventory: []
+  HP: 11
+  maxHP: 11
+  MP: 10
+  maxMP: 10
+  attack: 9
+  defense: 5
+  agility: 5
+  move: 5
+  unitPrefab: {fileID: 4700797944403510348, guid: 442af8e8c830dad40a21335c12b2f580, type: 3}

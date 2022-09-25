@@ -10,8 +10,12 @@ namespace DeepFry
 {
     public class BasePlayerUnit : BaseUnit
     {
-        public PlayerUnitClasses playerUnitClass;
+        public PlayerUnitClasses unitClass;
 
         public int exp, maxExp, level;
+
+        public MagicSO[] learnedMagic;
+
+        public ItemSO[] inventory;
     }
 }

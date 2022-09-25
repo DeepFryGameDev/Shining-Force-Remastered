@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.AI;
+using static UnityEngine.UI.CanvasScaler;
 
 namespace DeepFry
 {
@@ -21,6 +22,14 @@ namespace DeepFry
         MOVE,
         MENU,
         ENEMY
+    }
+
+    public enum TargetTypes
+    {
+        SELF,
+        PLAYER,
+        ENEMY,
+        ANY
     }
 
     public class BattleStateMachine : MonoBehaviour
@@ -56,7 +65,7 @@ namespace DeepFry
         TileSelection ts;
         BattleCamera batCam;
 
-        MoveCanvas moveCanvas;
+        MoveCanvas mc;
 
         MenuPrefabManager mpm;
 
@@ -77,7 +86,7 @@ namespace DeepFry
             sm = FindObjectOfType<StatusMenu>();
 
             batCam = FindObjectOfType<BattleCamera>();
-            moveCanvas = FindObjectOfType<MoveCanvas>();
+            mc = FindObjectOfType<MoveCanvas>();
 
             cameraFocused = false;
             runSelectModeStuffOnce = false;
@@ -116,8 +125,17 @@ namespace DeepFry
 
             foreach (PlayerUnitSO puSO in BattleInit.playerCombatants)
             {
+                GameObject newObject;
+
                 //Instantiate them
-                GameObject newObject = GameObject.Instantiate(puSO.unitPrefab, new Vector3(7, 0, 0), puSO.unitPrefab.transform.rotation, GameObject.Find("[Player Units]").transform);
+                if (puSO.ID.Equals(0))
+                {
+                    newObject = GameObject.Instantiate(puSO.unitPrefab, new Vector3(7, 0, 0), puSO.unitPrefab.transform.rotation, GameObject.Find("[Player Units]").transform);
+                } else 
+                {
+                    newObject = GameObject.Instantiate(puSO.unitPrefab, new Vector3(8, 0, 0), puSO.unitPrefab.transform.rotation, GameObject.Find("[Player Units]").transform);
+                }
+                
 
                 //newObject.GetComponent<Invector.vCharacterController.vThirdPersonController>().enabled = false;
                 //newObject.GetComponent<Invector.vCharacterController.vThirdPersonInput>().enabled = false;
@@ -130,6 +148,11 @@ namespace DeepFry
                     {
                         unit.SetUnitObject(newObject);
                         unit.GetUnitObject().GetComponent<TacticsMove>().unit = unit;
+
+                        Vector3 newRot = new Vector3(unit.GetUnitObject().transform.rotation.x, 0, unit.GetUnitObject().transform.rotation.z);
+                        unit.GetUnitObject().transform.eulerAngles = newRot;
+
+                        ToggleMovement(unit, false);
                         break;
                     }
                 }
@@ -167,7 +190,7 @@ namespace DeepFry
 
                     if (cameraFocused)
                     {
-                        Debug.Log("Turn start: " + currentUnit.name);
+                        Debug.Log("Turn start: " + currentUnit.name);                                              
 
                         // if player
                         if (currentUnit is BasePlayerUnit)
@@ -178,17 +201,22 @@ namespace DeepFry
                             workingPTM.lastTile = workingPTM.currentTile;
                             lastTile = workingPTM.lastTile;
 
+                            mc.DrawCanvas((BasePlayerUnit)currentUnit, lastTile);
+                            mc.ToggleMenu(true);
+
                             if (!selectableTilesFound)
                             {
                                 workingPTM.FindSelectableTiles();
                                 workingPTM.SetLastTile();
 
                                 selectableTilesFound = true;
-                            }                            
-
+                            }
                             turnState = turnStates.MOVE;
 
-                            FindObjectOfType<PlayerMovement>().canMove = true;
+                            StartCoroutine(currentUnit.ResetAnimator());
+
+                            Debug.Log("Setting movement to true: " + currentUnit.GetUnitObject().gameObject.name);
+                            ToggleMovement(currentUnit, true);
                         }
                         // if enemy
                         if (currentUnit is BaseEnemyUnit)
@@ -232,6 +260,8 @@ namespace DeepFry
                     {
                         //currentUnit.GetUnitObject().GetComponent<Invector.vCharacterController.vThirdPersonInput>().enabled = false;
 
+                        mc.ToggleMenu(false);
+
                         workingPTM.lastTile = null;
 
                         workingPTM.tempSelectableTiles.Clear();
@@ -253,6 +283,11 @@ namespace DeepFry
             }
         }
 
+        void ToggleMovement(BaseUnit unit, bool enable)
+        {
+            unit.GetUnitObject().GetComponent<PlayerMovement>().canMove = enable;
+        }
+
         void ProcessPlayerTurn()
         {
             if (!mpm.mapOpen && !mpm.optionsOpen)
@@ -271,8 +306,12 @@ namespace DeepFry
                             onLastTile = false;
 
                             // turn selection on
-                            ts.selectMode = selectModes.START;
+                            ts.selectMode = selectModes.PREPARATION;
                             ts.selectionOn = true;
+
+                            mc.ToggleMenu(false);
+
+                            workingPTM.RemoveSelectableTiles();
 
                             StartCoroutine(workingPTM.MovePlayerUnit(workingPTM.lastTile));
                         }
@@ -299,13 +338,9 @@ namespace DeepFry
                             {
                                 t.selectable = false;
                             }
+                            bm.menuState = menuStates.MAIN;
 
                             batCam.cameraMode = CameraModes.PLAYERMENU;
-                        }
-
-                        if (Input.GetKeyDown("c"))
-                        {
-                            turnState = turnStates.SELECT;
                         }
 
                         if (runSelectModeStuffOnce)
@@ -313,13 +348,13 @@ namespace DeepFry
                             runSelectModeStuffOnce = false;
                         }
 
-                        if (!moveCanvas.canvasDrawn)
+                        if (!mc.canvasDrawn)
                         {
                             TileStandingOn(currentUnitObject).GetComponent<LandEffect>().SetMultipliers(currentUnit);
-                            moveCanvas.DrawCanvas((BasePlayerUnit)currentUnit, TileStandingOn(currentUnitObject));
+                            mc.DrawCanvas((BasePlayerUnit)currentUnit, TileStandingOn(currentUnitObject));
                         } else
                         {
-                            moveCanvas.UpdateLandEffect(TileStandingOn(currentUnitObject));
+                            mc.UpdateLandEffect(TileStandingOn(currentUnitObject));
                         }
 
                         if (!currentUnit.GetUnitObject().GetComponent<PlayerMovement>().canMove)
@@ -329,8 +364,6 @@ namespace DeepFry
 
                         if (!selectableTilesFound)
                         {
-                            Debug.Log("Getting selectable tiles back");
-
                             foreach (Tile t in workingPTM.tempSelectableTiles)
                             {
                                 t.selectable = true;
@@ -343,36 +376,6 @@ namespace DeepFry
                     case turnStates.MENU:
 
                         mpm.canOpenMap = false;
-
-                        if (Input.GetKeyDown("w"))
-                        {
-                            bm.SetHovered(bm.topButton);
-                        }
-
-                        if (Input.GetKeyDown("d"))
-                        {
-                            bm.SetHovered(bm.rightButton);
-                        }
-
-                        if (Input.GetKeyDown("s"))
-                        {
-                            bm.SetHovered(bm.bottomButton);
-                        }
-
-                        if (Input.GetKeyDown("a"))
-                        {
-                            bm.SetHovered(bm.leftButton);
-                        }
-
-                        if (Input.GetKeyDown("c"))
-                        {
-                            turnState = turnStates.MOVE;
-                            batCam.cameraMode = CameraModes.PLAYERMOVE;
-
-                            selectableTilesFound = false;
-
-                            mpm.canOpenMap = true;
-                        }
 
                         if (currentUnit.GetUnitObject().GetComponent<PlayerMovement>().canMove)
                         {
@@ -388,11 +391,11 @@ namespace DeepFry
 
         private void SetUnitForMenu()
         {
-            Debug.Log("Opening menu: " + currentUnit.name);
             turnState = turnStates.MENU;
+            bm.ShowMenu(bm.mainMenu, 2);
 
             // turn off movement
-            FindObjectOfType<PlayerMovement>().ToggleCanMove();
+            currentUnit.GetUnitObject().GetComponent<PlayerMovement>().ToggleCanMove();
 
             // move unit to center of tile
             StartCoroutine(currentUnit.ResetAnimator());

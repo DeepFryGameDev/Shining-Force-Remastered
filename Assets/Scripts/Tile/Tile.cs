@@ -29,6 +29,8 @@ namespace DeepFry
         public float g = 0;
         public float h = 0;
 
+        public int tileLayer = 1 << 6;
+
         // Use this for initialization
         void Start()
         {
@@ -104,11 +106,12 @@ namespace DeepFry
             foreach (Collider item in colliders)
             {
                 Tile tile = item.GetComponent<Tile>();
+
                 if (tile != null && tile.walkable)
                 {
                     RaycastHit hit;
 
-                    if (!Physics.Raycast(tile.transform.position, Vector3.up, out hit, 1) || (tile == target))
+                    if (!Physics.Raycast(tile.transform.position, Vector3.up, out hit, 1, tileLayer) || (tile == target))
                     {
                         adjacencyList.Add(tile);
                     }

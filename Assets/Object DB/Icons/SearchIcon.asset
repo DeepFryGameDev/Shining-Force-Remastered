@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: SearchIcon
   m_EditorClassIdentifier: 
   commandName: Search
-  defaultIcon: {fileID: 0}
-  hoveredIcon: {fileID: 0}
+  defaultIcon: {fileID: 21300000, guid: 8ecbaae71f5cb3147af59b6b6d0be4bf, type: 3}
+  hoveredIcon: {fileID: 21300000, guid: 550385642c029e24e952330b8fd1e48a, type: 3}

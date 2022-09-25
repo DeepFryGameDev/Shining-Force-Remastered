@@ -91,7 +91,6 @@ namespace DeepFry
 
         void CancelOrbit()
         {
-            Debug.Log(orbitCam.transform.position);
             gameCam.transform.position = orbitCam.transform.position;
             gameCam.transform.rotation = orbitCam.transform.rotation;
             Debug.Log(gameCam.transform.position);

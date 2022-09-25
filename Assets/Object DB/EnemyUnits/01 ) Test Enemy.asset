@@ -21,6 +21,6 @@ MonoBehaviour:
   maxMP: 0
   attack: 8
   defense: 5
-  agility: 5
+  agility: 4
   move: 5
   unitPrefab: {fileID: 1329046361559213541, guid: 3802fc189f004c641a543f5cbc290b98, type: 3}

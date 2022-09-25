@@ -45,7 +45,7 @@ namespace DeepFry
             if (unit as BasePlayerUnit != null)
             {
                 BasePlayerUnit bpu = unit as BasePlayerUnit;
-                transform.Find("StatusPanel/StatsPanel/ClassText").GetComponent<TMP_Text>().text = bpu.playerUnitClass.ToString();
+                transform.Find("StatusPanel/StatsPanel/ClassText").GetComponent<TMP_Text>().text = bpu.unitClass.ToString();
                 transform.Find("StatusPanel/StatsPanel/LevelText").GetComponent<TMP_Text>().text = bpu.level.ToString();
 
                 transform.Find("StatusPanel/StatsPanel/EXPText").GetComponent<TMP_Text>().text = bpu.exp.ToString();

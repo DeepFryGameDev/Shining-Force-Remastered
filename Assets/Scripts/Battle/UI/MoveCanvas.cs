@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
+using UnityEngine.InputSystem.LowLevel;
 
 namespace DeepFry
 {
@@ -36,7 +37,7 @@ namespace DeepFry
             landEffectText.text = (tile.GetComponent<LandEffect>().GetDefenseMultiplier() * 100) + "%";
 
             nameText.text = unit.name;
-            classLevelText.text = unit.playerUnitClass.ToString() + " " + unit.level.ToString();
+            classLevelText.text = unit.unitClass.ToString() + " " + unit.level.ToString();
             hpText.text = unit.HP + " / " + unit.maxHP;
             mpText.text = unit.MP + " / " + unit.maxMP;
 
@@ -51,6 +52,11 @@ namespace DeepFry
         public void UpdateLandEffect(Tile tile)
         {
             landEffectText.text = (tile.GetComponent<LandEffect>().GetDefenseMultiplier() * 100) + "%";
+        }
+
+        public void ToggleMenu(bool open)
+        {
+            GetComponent<Animator>().SetBool("menuOpened", open);
         }
     }
 }

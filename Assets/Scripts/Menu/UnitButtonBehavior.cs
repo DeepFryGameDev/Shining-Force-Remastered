@@ -32,7 +32,7 @@ namespace DeepFry
             } else if (unit.unitType == unitTypes.PLAYER)
             {
                 BasePlayerUnit bpu = unit as BasePlayerUnit;
-                mm.SetText(bpu.playerUnitClass.ToString() + " - " + bpu.name);
+                mm.SetText(bpu.unitClass.ToString() + " - " + bpu.name);
             }
         }
 

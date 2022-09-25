@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: faa67f3a83b833a418dc47b267dd5c66, type: 3}
+  m_Name: DropItemIcon
+  m_EditorClassIdentifier: 
+  commandName: Drop
+  defaultIcon: {fileID: 21300000, guid: 987f7bd01923b504ab57347eaa0e94d4, type: 3}
+  hoveredIcon: {fileID: 21300000, guid: 3283051eb8b0ca940a06f15f4526c785, type: 3}
