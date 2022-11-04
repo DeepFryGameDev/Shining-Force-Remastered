@@ -2,6 +2,25 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+public enum ItemTypes
+{
+    USABLE,
+    EQUIPMENT,
+    KEY
+}
+public enum UsableItemTypes
+{
+    HEAL,
+    EFFECT,
+    ATTACK
+}
+
+public enum EquipmentTypes
+{
+    WEAPON,
+    ACCESSORY
+}
+
 namespace DeepFry
 {
     public class BaseItem
@@ -11,23 +30,6 @@ namespace DeepFry
 
         public Sprite icon;
 
-        public int targetRange;
-        public int effectRange;
-
-        public int value;
-
-        public TargetTypes targetType;
-
-        // Start is called before the first frame update
-        void Start()
-        {
-
-        }
-
-        // Update is called once per frame
-        void Update()
-        {
-
-        }
+        public ItemTypes itemType;
     }
 }

@@ -2,14 +2,26 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+public enum MagicTypes
+{
+    HEAL,
+    DAMAGE,
+    MISC
+}
+
 namespace DeepFry
 {
     public class BaseMagic
     {
         public int ID;
         public string name;
+        public MagicTypes magicType;
+
         public int mpCost;
         public Sprite icon;
+
+        public GameObject effectPrefab;
+        public AudioClip effectAudio;
 
         public int value;
 

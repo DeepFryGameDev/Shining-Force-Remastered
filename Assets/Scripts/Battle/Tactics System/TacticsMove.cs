@@ -43,9 +43,11 @@ namespace DeepFry
 
         public int tileLayer = 1 << 6;
 
+        public TargetTypes targetType;
+
         public Tile actualTargetTile;
 
-        List<Tile> pathToTargetTile = new List<Tile>();
+        protected List<Tile> pathToTargetTile = new List<Tile>();
 
         protected NavMeshAgent agent;
         protected Animator anim;
@@ -361,6 +363,8 @@ namespace DeepFry
 
         protected void FindPath(Tile target) // enemy usage
         {
+            //Debug.Log("Finding path to " + target.name);
+
             ComputeAdjacencyLists(jumpHeight, target);
             GetCurrentTile();
 
@@ -396,12 +400,15 @@ namespace DeepFry
                     {
                         //Do nothing, already processed
                     }
-                    else if (openList.Contains(tile))
-                    {
+                    else if (openList.Contains(tile)) // if openlist contains tile in adjecency list
+                    {                        
                         float tempG = t.g + Vector3.Distance(tile.transform.position, t.transform.position);
+
+                        //Debug.Log("tempG: " + tempG);
 
                         if (tempG < tile.g)
                         {
+                            //Debug.Log("tempG < tile.g - found quicker way to target");
                             tile.parent = t;
 
                             tile.g = tempG;
@@ -416,6 +423,8 @@ namespace DeepFry
                         tile.h = Vector3.Distance(tile.transform.position, target.transform.position);
                         tile.f = tile.g + tile.h;
 
+                        //Debug.Log("Adding to openList: " + tile.name);
+                        // maybe here verify tile is valid
                         openList.Add(tile);
                     }
                 }
@@ -457,7 +466,7 @@ namespace DeepFry
                 {
                     //Debug.Log("if t == target: true");
 
-                    //actualTargetTile = FindEndTile(t);
+                    actualTargetTile = FindEndTile(t);
 
                     //UpdateTileMovementRating(actualTargetTile);
 
@@ -506,6 +515,41 @@ namespace DeepFry
 
             //todo: what do you do if there is no path to the target tile?  Likely just skip turn I'm thinking
             Debug.Log("Path not found");
+        }
+
+        public int GetNumberOfTilesToTarget(Tile target) 
+        {
+            //Debug.Log("Getting number of tiles from " + unit.GetTile().name + " to " + target.name);
+            pathToTargetTile.Clear();
+
+            int count = 0;
+            Stack<Tile> pathTiles = new Stack<Tile>();
+
+            Tile next = target.parent;
+
+            while (next != null)
+            {
+                if (next != unit.GetTile())
+                {
+                    count++;
+                    pathToTargetTile.Add(next);
+                    //Debug.Log("Adding " + next.name + ", current count: " + count);                    
+                }
+
+                pathTiles.Push(next);
+                next = next.parent;                                    
+            }
+
+            pathToTargetTile.Reverse();
+
+            //Debug.Log("-=-=-=- Path to the target tile " + target.name + " -=-=-=-");
+            //for (int i = 0; i < pathToTargetTile.Count; i++)
+            //{
+            //    Debug.Log((i+1) + ") " + pathToTargetTile[i].name);
+            //}
+            //Debug.Log("-=-=-=-=-=-=-");
+
+            return count;
         }
 
         private void UpdateTileMovementRating(Tile targetTile)

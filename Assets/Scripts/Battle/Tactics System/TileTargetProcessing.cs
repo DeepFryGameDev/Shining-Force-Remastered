@@ -13,7 +13,7 @@ namespace DeepFry
 
         public BaseTileTarget currentBTT;
         public BaseMagic currentMagic;
-        public BaseItem currentItem;
+        public BaseUsableItem currentItem;
 
         // Start is called before the first frame update
         void Start()
@@ -41,7 +41,7 @@ namespace DeepFry
             return btt;
         }
 
-        public BaseTileTarget GetBaseTileTarget(BaseUnit unit, BaseItem item)
+        public BaseTileTarget GetBaseTileTarget(BaseUnit unit, BaseUsableItem item)
         {
             BaseTileTarget btt = new BaseTileTarget
             {
@@ -52,7 +52,18 @@ namespace DeepFry
             return btt;
         }
 
-        List<Tile> GetTargetTiles(int range) // Tiles for available targetting
+        public BaseTileTarget GetBaseTileTarget(BaseUnit unit)
+        {
+            BaseTileTarget btt = new BaseTileTarget
+            {
+                homeTile = bsm.TileStandingOn(unit.GetUnitObject()),
+                targetTiles = GetTargetTiles(1)
+            };
+
+            return btt;
+        }
+
+        public List<Tile> GetTargetTiles(int range) // Tiles for available targetting
         {
             List<Tile> tiles = new List<Tile>();
             float x = bsm.TileStandingOn(bsm.currentUnit.GetUnitObject()).transform.position.z;
@@ -68,9 +79,7 @@ namespace DeepFry
                     return tiles;
 
                 case 1:
-                    // return tiles from above, plus 1 range further
-
-                    tiles.Add(bsm.TileStandingOn(bsm.currentUnit.GetUnitObject()));
+                    // return tiles 1 range further
 
                     if (GetTileAtPos(new Vector3((y + 1), 0, x)))
                     {
@@ -95,6 +104,30 @@ namespace DeepFry
                     return tiles; // need to change
 
                 case 2:
+                    // return tiles from above, plus 1 range further
+
+                    tiles.Add(bsm.TileStandingOn(bsm.currentUnit.GetUnitObject()));
+
+                    if (GetTileAtPos(new Vector3((y + 1), 0, x)))
+                    {
+                        tiles.Add(GetTileAtPos(new Vector3((y + 1), 0, x)));
+                    }
+
+                    if (GetTileAtPos(new Vector3((y - 1), 0, x)))
+                    {
+                        tiles.Add(GetTileAtPos(new Vector3((y - 1), 0, x))); // Left
+                    }
+
+                    if (GetTileAtPos(new Vector3(y, 0, (x + 1))))
+                    {
+                        tiles.Add(GetTileAtPos(new Vector3(y, 0, (x + 1)))); // Up
+                    }
+
+                    if (GetTileAtPos(new Vector3(y, 0, (x - 1))))
+                    {
+                        tiles.Add(GetTileAtPos(new Vector3(y, 0, (x - 1)))); // Bottom
+                    }
+
                     return tiles; // need to change
                 default:
                     Debug.LogError("GetTargetTiles - No ID found");
@@ -147,8 +180,6 @@ namespace DeepFry
 
         public void BeginTileSelectForAction()
         {
-            // validate if there are any targets in the area.  If there are, proceed to below. else, return a message that there are no available targets.
-
             // bring up tile targetting
             Debug.Log("Prepare tile targetting");
 

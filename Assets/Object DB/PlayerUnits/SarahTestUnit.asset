@@ -21,8 +21,9 @@ MonoBehaviour:
   unitClass: 1
   learnedMagic:
   - {fileID: 11400000, guid: bb3dbdf82e284cb41a65896bb69bf54a, type: 2}
-  inventory: []
-  HP: 11
+  inventory:
+  - {fileID: 11400000, guid: 9180bdee1c730f14da56c30e23b1c61c, type: 2}
+  HP: 5
   maxHP: 11
   MP: 10
   maxMP: 10

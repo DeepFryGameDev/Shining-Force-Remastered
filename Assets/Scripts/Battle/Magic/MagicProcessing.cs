@@ -9,6 +9,9 @@ namespace DeepFry
         public BaseMagic currentMagic;
         public BasePlayerUnit currentPlayerUnit;
 
+        BattleMenu bm;
+        CombatInteraction ci;
+
         TileSelection ts;
         TileTargetProcessing ttp;
 
@@ -17,6 +20,8 @@ namespace DeepFry
         {
             ts = FindObjectOfType<TileSelection>();
             ttp = FindObjectOfType<TileTargetProcessing>();
+            bm = FindObjectOfType<BattleMenu>();
+            ci = FindObjectOfType<CombatInteraction>();
         }
 
         // Update is called once per frame
@@ -62,6 +67,15 @@ namespace DeepFry
             Debug.Log("Casting " + currentMagic.name + " on " + ts.targetUnit.name);
 
             Invoke(FormatName(currentMagic.name), 0.0f);
+
+            List<BaseUnit> newUnitList = new List<BaseUnit>();
+            newUnitList.Add(ts.targetUnit);
+
+            ci.SetNewBaseCombatInteraction(CombatInteractionTypes.MAGIC, currentPlayerUnit, newUnitList, currentMagic);
+            ci.BuildNewCombatInteraction();
+
+            ts.mainCam.SetActive(true);
+            ts.selectionCam.SetActive(false);
 
             PostMagicProcessing();
         }

@@ -6,12 +6,13 @@ namespace DeepFry
 {
     public class ItemProcessing : MonoBehaviour
     {
-        public BaseItem currentItem;
+        public BaseUsableItem currentItem;
         public BasePlayerUnit currentPlayerUnit;
 
         BattleMenu bm;
         TileSelection ts;
         TileTargetProcessing ttp;
+        CombatInteraction ci;
 
         // Start is called before the first frame update
         void Start()
@@ -19,6 +20,7 @@ namespace DeepFry
             ts = FindObjectOfType<TileSelection>();
             ttp = FindObjectOfType<TileTargetProcessing>();
             bm = FindObjectOfType<BattleMenu>();
+            ci = FindObjectOfType<CombatInteraction>();
         }
 
         // Update is called once per frame
@@ -27,7 +29,7 @@ namespace DeepFry
 
         }
 
-        public void ItemChosen(BaseItem item, BasePlayerUnit bpu)
+        public void ItemChosen(BaseUsableItem item, BasePlayerUnit bpu)
         {
             currentPlayerUnit = bpu;
             currentItem = item;
@@ -55,7 +57,16 @@ namespace DeepFry
 
                     Invoke(FormatName(currentItem.name), 0.0f);
 
-                    PostItemProcessing();
+                    List<BaseUnit> newUnitList = new List<BaseUnit>();
+                    newUnitList.Add(ts.targetUnit);
+
+                    ci.SetNewBaseCombatInteraction(CombatInteractionTypes.ITEM, currentPlayerUnit, newUnitList, currentItem);
+                    ci.BuildNewCombatInteraction();
+
+                    ts.mainCam.SetActive(true);
+                    ts.selectionCam.SetActive(false);
+
+                    // PostItemProcessing(); // - needs to be done after combat interaction is finished.. add a check here to verify combat interaction is complete before proceeding
                     break;
                 case itemMenuModes.GIVE:
 

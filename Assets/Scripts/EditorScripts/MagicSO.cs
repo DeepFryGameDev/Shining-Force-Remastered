@@ -9,6 +9,8 @@ public class MagicSO : ScriptableObject
     public int ID;
     new public string name;
 
+    public MagicTypes magicType;
+
     public int mpCost;
 
     public int targetRange;
@@ -20,6 +22,9 @@ public class MagicSO : ScriptableObject
 
     public Sprite icon;
 
+    public GameObject effectPrefab;
+    public AudioClip effectSE;
+
     public TargetTypes targetType;
 
     public BaseMagic GetBaseMagic()
@@ -28,9 +33,15 @@ public class MagicSO : ScriptableObject
         {
             ID = ID,
             name = name,
+            
+            magicType = magicType,
+
             mpCost = mpCost,
 
             icon = icon,
+
+            effectPrefab = effectPrefab,
+            effectAudio = effectSE,
 
             value = value,
 

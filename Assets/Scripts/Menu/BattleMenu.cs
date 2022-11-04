@@ -23,12 +23,16 @@ namespace DeepFry
         MenuPrefabManager mpm;
         TileSelection ts;
 
+        AttackProcessing ap;
+
         MagicItemMenu mim;
         TMP_Text commandNameText;
 
         BasePlayerUnit currentPlayerUnit;
 
         public itemMenuModes itemMenuMode;
+
+        bool menuOpen;
 
         private void Awake()
         {
@@ -37,6 +41,8 @@ namespace DeepFry
             batCam = FindObjectOfType<BattleCamera>();
             mpm = FindObjectOfType<MenuPrefabManager>();
             ts = FindObjectOfType<TileSelection>();
+
+            ap = FindObjectOfType<AttackProcessing>();
 
             commandNameText = GameObject.Find("MainMenu/TextBG/MenuText").GetComponent<TMP_Text>();
 
@@ -63,7 +69,7 @@ namespace DeepFry
 
                     // draw menu
 
-                    if (itemMenuMode == itemMenuModes.IDLE)
+                    if (menuOpen)
                     {
                         if (Input.GetKeyDown("e"))
                         {
@@ -154,7 +160,7 @@ namespace DeepFry
                             {
                                 Debug.Log("Open inventory again");
                                 ts.fromMenu = true;
-                                OpenInventory();
+                                OpenInventory(itemMenuMode);
                             } else
                             {
                                 mim.HideMenu();
@@ -190,7 +196,7 @@ namespace DeepFry
             mim.GetComponent<Animator>().SetBool("menuOpened", true);
         }
 
-        public void OpenInventory()
+        public void OpenInventory(itemMenuModes imm)
         {
             currentPlayerUnit = (BasePlayerUnit)bsm.currentUnit;
 
@@ -204,6 +210,8 @@ namespace DeepFry
 
                 menuState = menuStates.ITEM;
                 mim.menuMode = MagicItemMenuModes.ITEM;
+
+                itemMenuMode = imm;
             }
             else
             {
@@ -219,7 +227,9 @@ namespace DeepFry
 
         void AttackButtonPressed()
         {
-            Debug.Log("Attack");
+            currentPlayerUnit = (BasePlayerUnit)bsm.currentUnit;
+
+            ap.AttackChosen(currentPlayerUnit);
         }
 
         public void ItemButtonPressed()
@@ -233,33 +243,28 @@ namespace DeepFry
 
         void UseItemButtonPressed()
         {
-            itemMenuMode = itemMenuModes.USE;
-
-            OpenInventory();
+            OpenInventory(itemMenuModes.USE);
         }
 
         void EquipItemButtonPressed()
         {
             Debug.Log("Equip Item button pressed");
-            itemMenuMode = itemMenuModes.EQUIP;
 
-            OpenInventory();
+            OpenInventory(itemMenuModes.EQUIP);
         }
 
         void DropItemButtonPressed()
         {
             Debug.Log("Drop Item button pressed");
-            itemMenuMode = itemMenuModes.DROP;
 
-            OpenInventory();
+            OpenInventory(itemMenuModes.DROP);
         }
 
         void GiveItemButtonPressed()
         {
             Debug.Log("Give Item button pressed");
-            itemMenuMode = itemMenuModes.GIVE;
 
-            OpenInventory();
+            OpenInventory(itemMenuModes.GIVE);
         }
 
         void MagicButtonPressed()
@@ -283,18 +288,8 @@ namespace DeepFry
             rightButton.GetComponent<MenuIconBehavior>().hovered = false;
             bottomButton.GetComponent<MenuIconBehavior>().hovered = false;
             leftButton.GetComponent<MenuIconBehavior>().hovered = false;
-        }
 
-        void EndTurn()
-        {
-            HideMenu(mainMenu);
-
-            commandNameText.text = "";
-
-            batCam.cameraMode = CameraModes.IDLE;
-
-            bsm.battleState = battleStates.ENDTURN;
-            bsm.turnState = turnStates.IDLE;
+            menuOpen = false;
         }
 
         public void ShowMenu(GameObject menu, int defaultHoveredButton)
@@ -309,10 +304,11 @@ namespace DeepFry
                 if (menuState == menuStates.ITEM)
                 {
                     GameObject.Find("MainMenu/TextBG/MenuText").GetComponent<TMP_Text>().text = itemMenuIcons[defaultHoveredButton].commandName;
-                } else
+                }
+                else
                 {
                     GameObject.Find("MainMenu/TextBG/MenuText").GetComponent<TMP_Text>().text = mainMenuIcons[defaultHoveredButton].commandName;
-                }                
+                }
             }
 
             switch (defaultHoveredButton)
@@ -337,7 +333,28 @@ namespace DeepFry
                     Debug.LogError("Incorrect hovered button: " + defaultHoveredButton);
                     break;
             }
-            
+
+            menuOpen = true;
+        }
+
+        public void EndTurn()
+        {
+            HideMenu(mainMenu);
+
+            commandNameText.text = "";
+
+            batCam.cameraMode = CameraModes.IDLE;
+
+            menuState = menuStates.IDLE;
+            bsm.battleState = battleStates.ENDTURN;
+            bsm.turnState = turnStates.IDLE;
+        } 
+
+        public void ResetForNewTurn()
+        {
+            itemMenuMode = itemMenuModes.IDLE;
+            menuState = menuStates.IDLE;
+            SetMainMenuButtons();
         }
 
         protected override void SetMainMenuButtons()

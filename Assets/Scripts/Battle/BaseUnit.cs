@@ -23,12 +23,16 @@ namespace DeepFry
         public unitTypes unitType;
         public unitRaces unitRace;
 
+        public int level;
+
         public int HP, maxHP, MP, maxMP;
         public int attack, defense, agility, move;
 
         public GameObject unitPrefab;
 
         public GameObject unitObject;
+
+        int tileLayer = 1 << 6;
 
         public void SetUnitObject(GameObject obj) { unitObject = obj; }
 
@@ -40,5 +44,27 @@ namespace DeepFry
             yield return new WaitForSeconds(0.05f);
             unitObject.GetComponent<Animator>().enabled = true;
         }
+
+        public Tile GetTile()
+        {
+            RaycastHit hit;
+            Tile tile = null;
+
+            if (unitObject == null)
+            {
+                Debug.LogError("NULL");
+            }
+
+            if (Physics.Raycast(unitObject.transform.position, -Vector3.up, out hit, Mathf.Infinity, tileLayer))
+            {
+                //Debug.Log("Hit collider: " + hit.collider.gameObject.name);
+                tile = hit.collider.GetComponent<Tile>();
+            }
+
+            //if (!tile) Debug.LogWarning("GetTileAtPos: No tile found at position " + position);
+
+            return tile;
+        }
+
     }
 }

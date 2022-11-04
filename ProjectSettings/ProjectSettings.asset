@@ -593,7 +593,8 @@ PlayerSettings:
   webGLThreadsSupport: 0
   webGLDecompressionFallback: 0
   scriptingDefineSymbols:
-    1: STARTER_ASSETS_PACKAGES_CHECKED
+    1: STARTER_ASSETS_PACKAGES_CHECKED;USE_PHYSICS2D;TMP_PRESENT;USE_CINEMACHINE
+    7: USE_PHYSICS2D;TMP_PRESENT;USE_CINEMACHINE
     13: STARTER_ASSETS_PACKAGES_CHECKED
   additionalCompilerArguments: {}
   platformArchitecture: {}

@@ -43,6 +43,18 @@ namespace DeepFry
         public float camRotThreshold = .3f;
         [Range(0, 5f)]
         public float camMoveSpeed = 3f;
+        [Range(10, 40)]
+        public float targetZoomFOV = 25;
+        [Range(.05f, 1)]
+        public float zoomStopThreshold = .1f;
+        [Range(.1f, 2)]
+        public float zoomSmoothTime = .3f;
+        [Range(10, 35)]
+        public float zoomInFOV = 25;
+        [Range(35, 50)]
+        public float zoomOutFOV = 40;
+
+        float zoomVelocity = 0;
 
         public bool selectionOn, selectionOff, inSelection, fromMenu;
 
@@ -52,6 +64,8 @@ namespace DeepFry
         int tempTargetRange;
 
         public GameObject mainCam, selectionCam, orbitalCam, tileSelectCursor;
+
+        List<Tile> selectableTiles = new List<Tile>();
 
         BattleStateMachine bsm;
         MenuPrefabManager mpm;
@@ -68,6 +82,7 @@ namespace DeepFry
         MagicItemMenu mim;
         MagicProcessing mp;
         ItemProcessing ip;
+        AttackProcessing ap;
         
 
         void Start()
@@ -84,6 +99,8 @@ namespace DeepFry
             mp = FindObjectOfType<MagicProcessing>();
 
             ip = FindObjectOfType<ItemProcessing>();
+
+            ap = FindObjectOfType<AttackProcessing>();
 
             camMoveReady = false;
 
@@ -178,7 +195,7 @@ namespace DeepFry
 
                         if (camMoveReady)
                         {
-                            MoveCamera();
+                            MoveCamera(selectionCam, toPos);
                         }
 
                         if (positionComplete && rotationComplete)
@@ -231,14 +248,44 @@ namespace DeepFry
                             // Vector3 pos = // needs to be first available target's tile's position.
                             Vector3 tempPos;
 
-                            if (ttp.currentMagic != null)
+                            if (bsm.currentUnit.unitType == unitTypes.PLAYER)
                             {
-                                targetUnit = ttp.GetFirstAvailableTarget(ttp.currentMagic.targetType);
-                                tempTargetRange = ttp.currentMagic.targetRange;
-                            } else
+                                if (ttp.currentMagic != null)
+                                {
+                                    targetUnit = ttp.GetFirstAvailableTarget(ttp.currentMagic.targetType);
+                                    tempTargetRange = ttp.currentMagic.targetRange;
+                                }
+                                else if (ttp.currentItem != null)
+                                {
+                                    targetUnit = ttp.GetFirstAvailableTarget(ttp.currentItem.targetType);
+                                    tempTargetRange = ttp.currentItem.targetRange;
+                                }
+                                else
+                                {
+                                    targetUnit = ttp.GetFirstAvailableTarget(TargetTypes.ENEMY);
+                                    BasePlayerUnit tempBPU = (BasePlayerUnit)bsm.currentUnit;
+                                    tempTargetRange = tempBPU.GetEquippedWeapon().attackRange;
+                                }
+                            }
+
+                            if (bsm.currentUnit.unitType == unitTypes.ENEMY)
                             {
-                                targetUnit = ttp.GetFirstAvailableTarget(ttp.currentItem.targetType);
-                                tempTargetRange = ttp.currentItem.targetRange;
+                                if (bsm.currentUnit.unitType == unitTypes.PLAYER)
+                                {
+                                    if (ttp.currentMagic != null)
+                                    {
+                                        // magic not developed yet
+                                    }
+                                    else if (ttp.currentItem != null)
+                                    {
+                                        // items not developed yet
+                                    }
+                                    else
+                                    {
+                                        BaseEnemyUnit tempBEU = (BaseEnemyUnit)bsm.currentUnit;
+                                        tempTargetRange = tempBEU.attackRange;
+                                    }
+                                }
                             }
 
                             tempPos = targetUnit.GetUnitObject().transform.position;
@@ -252,15 +299,29 @@ namespace DeepFry
                             if (positionComplete && rotationComplete)
                             {
                                 // show tile range
+
+                                selectableTiles.Clear();
+                                List<Tile> effectTiles = new List<Tile>();
+
+                                if (ttp.currentItem == null && ttp.currentMagic == null) // attack
+                                {
+                                    effectTiles = ttp.GetTileRange(tempTargetRange, ttp.GetTileAtPos(bsm.currentUnit.GetUnitObject().transform.position));
+                                } else // magic or item
+                                {
+                                    effectTiles = ttp.GetTileRange(tempTargetRange, ttp.GetTileAtPos(tempPos));
+                                }
                                 
-                                List<Tile> effectTiles = ttp.GetTileRange(tempTargetRange, ttp.GetTileAtPos(tempPos));
                                 foreach (Tile tile in effectTiles)
                                 {
-                                    tile.selectable = true;
+                                    selectableTiles.Add(tile);
                                 }
+
+                                SetSelectableTiles(true);
 
                                 SetTileSelectCursorPos(ttp.GetTileAtPos(tempPos));
                                 tileSelectCursor.SetActive(true);
+
+                                Debug.Log("Continue here");
 
                                 targetMode = targetModes.TILESELECTION;
                             }
@@ -268,7 +329,10 @@ namespace DeepFry
 
                         break;
                     case targetModes.TILESELECTION:
-                        HandleTileSelectionInput();
+                        if (bsm.currentUnit.unitType == unitTypes.PLAYER)
+                        {
+                            HandleTileSelectionInput();
+                        }                        
 
                         KeepCameraOnCursor();
                         break;
@@ -343,9 +407,10 @@ namespace DeepFry
                 if (ttp.currentMagic != null)
                 {
                     Debug.Log("---");
-                    Debug.Log("Simulating magic - MP before: " + bsm.currentUnit.MP);
                     mp.ExecuteMagic();
-                    Debug.Log("Simulating magic - MP after: " + bsm.currentUnit.MP);
+                    targetMode = targetModes.IDLE;
+                    SetSelectableTiles(false);
+                    inSelection = false;
                     Debug.Log("---");
                 }
 
@@ -353,6 +418,19 @@ namespace DeepFry
                 {
                     Debug.Log("---");
                     ip.ExecuteItem();
+                    targetMode = targetModes.IDLE;
+                    SetSelectableTiles(false);
+                    inSelection = false;
+                    Debug.Log("---");
+                }
+
+                if (ttp.currentItem == null && ttp.currentMagic == null)
+                {
+                    Debug.Log("---");
+                    ap.ExecuteAttack();
+                    targetMode = targetModes.IDLE;
+                    SetSelectableTiles(false);
+                    inSelection = false;
                     Debug.Log("---");
                 }
             }
@@ -362,6 +440,14 @@ namespace DeepFry
                 selectionOff = true;
                 inSelection = false;
                 selectMode = selectModes.PREPAREIDLE;
+            }
+        }
+
+        public void SetSelectableTiles(bool selectable)
+        {
+            foreach (Tile tile in selectableTiles)
+            {
+                tile.selectable = selectable;
             }
         }
 
@@ -405,7 +491,7 @@ namespace DeepFry
 
             if (camMoveReady)
             {
-                MoveCamera();
+                MoveCamera(selectionCam, toPos);
             }
         }
 
@@ -438,36 +524,104 @@ namespace DeepFry
             tileSelectCursor.transform.position = newPos;
         }
 
-        void MoveCamera()
+        public void MoveCamera(GameObject camera, Vector3 toPosition)
         {
             if (!positionComplete)
             {
-                selectionCam.transform.position = Vector3.SmoothDamp(selectionCam.transform.position, toPos, ref refPos, camMovementTime);
+                camera.transform.position = Vector3.SmoothDamp(camera.transform.position, toPosition, ref refPos, camMovementTime);
 
-                if (Vector3.Distance(selectionCam.transform.position, toPos) <= camDistanceThreshold || fromMenu)
+                if (Vector3.Distance(camera.transform.position, toPosition) <= camDistanceThreshold || fromMenu)
                 {
+                    Debug.Log("Camera is moved");
                     positionComplete = true;
 
-                    selectionCam.transform.position = toPos;
+                    camera.transform.position = toPosition;
                 }
             }
 
             if (!rotationComplete)
             {
-                selectionCam.transform.rotation = Quaternion.Slerp(selectionCam.transform.rotation, Quaternion.Euler(toRot), camRotationSpeed * Time.deltaTime);
+                camera.transform.rotation = Quaternion.Slerp(camera.transform.rotation, Quaternion.Euler(toRot), camRotationSpeed * Time.deltaTime);
 
-                if (toRot.x - selectionCam.transform.eulerAngles.x <= camRotThreshold)
+                if (toRot.x - camera.transform.eulerAngles.x <= camRotThreshold)
                 {
-                    Debug.Log("setting rotation to complete");
                     rotationComplete = true;
 
-                    selectionCam.transform.rotation = Quaternion.Euler(toRot);
+                    camera.transform.rotation = Quaternion.Euler(toRot);
                 }
             }
 
             if (positionComplete && rotationComplete)
             {
                 camMoveReady = false;
+            }
+        }
+
+        public IEnumerator MoveCamera(GameObject cam, BaseUnit unit)
+        {
+            Tile t = ttp.GetTileAtPos(unit.GetUnitObject().transform.position);
+
+            Debug.Log("Moving camera to " + unit.name);
+
+            bool posComplete = false, rotComplete = false, moveComplete = false;
+            Vector3 toPos = new Vector3(), toRot = new Vector3(), refPos = new Vector3();
+
+            toPos = new Vector3(t.transform.position.x, camYOffset, t.transform.position.z - camZOffset);
+            toRot = new Vector3(camRotXOffset, 0.0f, 0.0f);
+
+            while (!moveComplete)
+            {
+                cam.transform.position = Vector3.SmoothDamp(cam.transform.position, toPos, ref refPos, camMovementTime);
+
+                cam.transform.rotation = Quaternion.Slerp(cam.transform.rotation, Quaternion.Euler(toRot), camRotationSpeed * Time.deltaTime);
+
+                if (Vector3.Distance(cam.transform.position, toPos) <= camDistanceThreshold)
+                {
+                    posComplete = true;
+
+                    cam.transform.position = toPos;
+                }
+
+                if (toRot.x - cam.transform.eulerAngles.x <= camRotThreshold)
+                {
+                    rotComplete = true;
+
+                    cam.transform.rotation = Quaternion.Euler(toRot);
+                }
+
+                if (posComplete && rotComplete)
+                {
+                    moveComplete = true;
+                }
+
+                yield return new WaitForEndOfFrame();
+            }
+        }
+
+        public IEnumerator ZoomToUnit(GameObject camera, bool zoomingIn)
+        {
+            Camera cam = camera.GetComponent<Camera>();
+
+            bool zoomComplete = false;
+            float newFOV, targetFOV;
+
+            if (zoomingIn)
+                targetFOV = zoomInFOV;
+            else
+                targetFOV = zoomOutFOV;
+
+            while (!zoomComplete)
+            {
+                cam.fieldOfView = Mathf.SmoothDamp(cam.fieldOfView, targetFOV, ref zoomVelocity, zoomSmoothTime);
+
+                newFOV = cam.fieldOfView;
+
+                if (Mathf.Abs(newFOV - targetFOV) <= zoomStopThreshold)
+                {
+                    zoomComplete = true;
+                }
+
+                yield return new WaitForEndOfFrame();
             }
         }
 
@@ -490,6 +644,11 @@ namespace DeepFry
             Debug.LogError("No tile found");
 
             return null;
+        }
+
+        public void ToggleTileSelectCursor(bool enabled)
+        {
+            tileSelectCursor.SetActive(enabled);
         }
     }
 }

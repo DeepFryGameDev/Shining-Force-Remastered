@@ -118,6 +118,24 @@ namespace DeepFry
                 }
             }
         }
+
+        public BaseUnit GetUnitOnTile()
+        {
+            RaycastHit[] hits;
+
+            Vector3 posToTry = new Vector3(transform.position.x, 1, transform.position.z);
+
+            hits = Physics.RaycastAll(posToTry, Vector3.down, 5.0f);
+
+            for (int i = 0; i < hits.Length; i++)
+            {
+                if (hits[i].collider.CompareTag("PlayerUnit") || hits[i].collider.CompareTag("EnemyUnit"))
+                {
+                    return hits[i].collider.GetComponent<TacticsMove>().unit;
+                }
+            }
+            return null;
+        }
     }
 
 }

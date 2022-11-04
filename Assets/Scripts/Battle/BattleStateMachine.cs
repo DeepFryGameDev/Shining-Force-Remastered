@@ -37,7 +37,6 @@ namespace DeepFry
         public List<BaseUnit> activeUnits = new List<BaseUnit>();
 
         public BaseUnit currentUnit;
-        GameObject currentUnitObject;
 
         Cinemachine.CinemachineFreeLook cineCam;
 
@@ -108,13 +107,14 @@ namespace DeepFry
             foreach (EnemyUnitSO euSO in BattleInit.enemyCombatants)
             {
                 //Instantiate them
-                GameObject newObject = GameObject.Instantiate(euSO.unitPrefab, new Vector3(8, 0, 13), euSO.unitPrefab.transform.rotation, GameObject.Find("[Enemy Units]").transform);
+                GameObject newObject = GameObject.Instantiate(euSO.unitPrefab, new Vector3(7, 0, 15), euSO.unitPrefab.transform.rotation, GameObject.Find("[Enemy Units]").transform);
 
                 foreach (BaseUnit unit in activeUnits)
                 {
                     if (unit.unitType == unitTypes.ENEMY && euSO.ID == unit.ID)
                     {
                         unit.SetUnitObject(newObject);
+                        unit.GetUnitObject().GetComponent<TacticsMove>().unit = unit;
                         unit.GetUnitObject().GetComponent<EnemyTacticsMove>().enemyUnit = (BaseEnemyUnit)unit;
                         break;
                     }
@@ -158,6 +158,10 @@ namespace DeepFry
                 }
 
                 newObject.GetComponent<PlayerTacticsMove>().Init();
+
+                // reset animator workaround:
+                newObject.SetActive(false);
+                newObject.SetActive(true);
             }
         }
 
@@ -174,7 +178,6 @@ namespace DeepFry
 
             Debug.Log("------");
             currentUnit = activeUnits[0];
-            currentUnitObject = currentUnit.unitObject;
         }
 
         void RunCombat()
@@ -195,6 +198,7 @@ namespace DeepFry
                         // if player
                         if (currentUnit is BasePlayerUnit)
                         {
+                            batCam.EnableCameraFreeLook(true);
                             workingPTM = currentUnit.GetUnitObject().GetComponent<PlayerTacticsMove>();
 
                             workingPTM.GetCurrentTile();
@@ -217,24 +221,25 @@ namespace DeepFry
 
                             Debug.Log("Setting movement to true: " + currentUnit.GetUnitObject().gameObject.name);
                             ToggleMovement(currentUnit, true);
+
+                            battleState = battleStates.DURINGTURN;
                         }
                         // if enemy
                         if (currentUnit is BaseEnemyUnit)
                         {
+                            batCam.EnableCameraFreeLook(false);
                             workingETM = currentUnit.GetUnitObject().GetComponent<EnemyTacticsMove>();
                             // just simulate enemy taking a turn, wait a few seconds then proceed to player turn
 
                             workingETM.GetCurrentTile();
-
                             workingETM.lastTile = workingETM.currentTile;
                             lastTile = workingETM.lastTile;
-
                             workingETM.SetLastTile();
                             workingETM.Init();
                             workingETM.SetActualTargetTile();
-                        }
 
-                        battleState = battleStates.DURINGTURN;
+                            battleState = battleStates.DURINGTURN;
+                        }
                     }
                     
                     break;
@@ -259,6 +264,7 @@ namespace DeepFry
                     if (currentUnit is BasePlayerUnit)
                     {
                         //currentUnit.GetUnitObject().GetComponent<Invector.vCharacterController.vThirdPersonInput>().enabled = false;
+                        bm.ResetForNewTurn();
 
                         mc.ToggleMenu(false);
 
@@ -350,11 +356,11 @@ namespace DeepFry
 
                         if (!mc.canvasDrawn)
                         {
-                            TileStandingOn(currentUnitObject).GetComponent<LandEffect>().SetMultipliers(currentUnit);
-                            mc.DrawCanvas((BasePlayerUnit)currentUnit, TileStandingOn(currentUnitObject));
+                            TileStandingOn(currentUnit.GetUnitObject()).GetComponent<LandEffect>().SetMultipliers(currentUnit);
+                            mc.DrawCanvas((BasePlayerUnit)currentUnit, TileStandingOn(currentUnit.GetUnitObject()));
                         } else
                         {
-                            mc.UpdateLandEffect(TileStandingOn(currentUnitObject));
+                            mc.UpdateLandEffect(TileStandingOn(currentUnit.GetUnitObject()));
                         }
 
                         if (!currentUnit.GetUnitObject().GetComponent<PlayerMovement>().canMove)
@@ -399,12 +405,11 @@ namespace DeepFry
 
             // move unit to center of tile
             StartCoroutine(currentUnit.ResetAnimator());
-            Debug.Log("move " + currentUnitObject.gameObject.name + " to: " + TileStandingOn(currentUnitObject).transform.position);
-            currentUnitObject.transform.position = new Vector3(TileStandingOn(currentUnitObject).transform.position.x,
-                currentUnitObject.transform.position.y, TileStandingOn(currentUnitObject).transform.position.z);
+            currentUnit.GetUnitObject().transform.position = new Vector3(TileStandingOn(currentUnit.GetUnitObject()).transform.position.x,
+                currentUnit.GetUnitObject().transform.position.y, TileStandingOn(currentUnit.GetUnitObject()).transform.position.z);
 
             // set tile's land effect
-            TileStandingOn(currentUnitObject).GetComponent<LandEffect>().SetMultipliers(currentUnit);
+            TileStandingOn(currentUnit.GetUnitObject()).GetComponent<LandEffect>().SetMultipliers(currentUnit);
         }
 
         public Tile TileStandingOn(GameObject unit)
@@ -423,6 +428,8 @@ namespace DeepFry
 
         void SetCameraFocus()
         {
+            cineCam.enabled = true;
+
             if (cineCam.Follow != currentUnit.GetUnitObject().transform)
             {
                 cineCam.Follow = currentUnit.GetUnitObject().transform;

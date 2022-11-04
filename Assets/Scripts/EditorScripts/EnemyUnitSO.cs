@@ -9,6 +9,10 @@ public class EnemyUnitSO : ScriptableObject
 
     public unitRaces unitRace;
 
+    public int level;
+
+    public int attackRange;
+
     public int HP, maxHP, MP, maxMP;
     public int attack, defense, agility, move;
 
@@ -16,24 +20,28 @@ public class EnemyUnitSO : ScriptableObject
 
     public BaseEnemyUnit GetEnemyUnit()
     {
-        BaseEnemyUnit enemyUnit = new BaseEnemyUnit();
+        BaseEnemyUnit enemyUnit = new BaseEnemyUnit
+        {
+            name = name,
+            unitType = unitTypes.ENEMY,
 
-        enemyUnit.name = name;
-        enemyUnit.unitType = unitTypes.ENEMY;
+            level = level,
+            HP = HP,
+            MP = MP,
+            maxHP = maxHP,
+            maxMP = maxMP,
 
-        enemyUnit.HP = HP;
-        enemyUnit.MP = MP;
-        enemyUnit.maxHP = maxHP;
-        enemyUnit.maxMP = maxMP;
+            attack = attack,
+            defense = defense,
+            agility = agility,
+            move = move,
 
-        enemyUnit.attack = attack;
-        enemyUnit.defense = defense;
-        enemyUnit.agility = agility;
-        enemyUnit.move = move;
+            attackRange = attackRange,
 
-        enemyUnit.unitPrefab = unitPrefab;
+            unitPrefab = unitPrefab,
 
-        enemyUnit.unitRace = unitRace;
+            unitRace = unitRace
+        };
 
         return enemyUnit;
     }

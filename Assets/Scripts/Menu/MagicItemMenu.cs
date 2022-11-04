@@ -70,21 +70,24 @@ namespace DeepFry
             {
                 switch (menuMode)
                 {
-                    case MagicItemMenuModes.ITEM:
+                    case MagicItemMenuModes.ITEM:                        
+
                         switch (bm.itemMenuMode)
                         {
                             case itemMenuModes.USE:
-                                ip.ItemChosen(currentBPU.inventory[hoveredButtonVal].GetBaseItem(), currentBPU);
+                                UsableItemSO uisou = (UsableItemSO)currentBPU.inventory[hoveredButtonVal];
+                                ip.ItemChosen(uisou.GetBaseItem(), currentBPU);
                                 break;
                             case itemMenuModes.EQUIP:
                                 Debug.Log("Equip chosen in menu");
                                 break;
                             case itemMenuModes.DROP:
                                 Debug.Log("Drop chosen in menu");
-                                ip.RemoveFromInventory(currentBPU.inventory[hoveredButtonVal].GetBaseItem(), currentBPU);
+                                UsableItemSO uisod = (UsableItemSO)currentBPU.inventory[hoveredButtonVal];
+                                ip.RemoveFromInventory(uisod.GetBaseItem(), currentBPU);
                                 break;
                             case itemMenuModes.GIVE:
-                                ip.ItemChosen(currentBPU.inventory[hoveredButtonVal].GetBaseItem(), currentBPU);
+                                Debug.Log("Give chosen in menu");
                                 break;
                         }                        
                         break;

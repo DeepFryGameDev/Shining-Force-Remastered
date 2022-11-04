@@ -107,6 +107,19 @@ namespace DeepFry
             inOrbit = false;
 
         }
+
+        public void EnableCameraFreeLook(bool enabled)
+        {
+            if (enabled)
+            {
+                gameCam.m_XAxis.m_MaxSpeed = 300f;
+                gameCam.m_YAxis.m_MaxSpeed = 2f;
+            } else
+            {
+                gameCam.m_XAxis.m_MaxSpeed = 0f;
+                gameCam.m_YAxis.m_MaxSpeed = 0f;
+            }
+        }
     }
 
 }

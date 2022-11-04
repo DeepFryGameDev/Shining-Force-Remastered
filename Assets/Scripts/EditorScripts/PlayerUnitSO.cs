@@ -15,7 +15,7 @@ public class PlayerUnitSO : ScriptableObject
 
     public MagicSO[] learnedMagic;
 
-    public ItemSO[] inventory;
+    public BaseItemSO[] inventory;
 
     public int HP, maxHP, MP, maxMP;
     public int attack, defense, agility, move;
@@ -24,35 +24,36 @@ public class PlayerUnitSO : ScriptableObject
 
     public BasePlayerUnit GetPlayerUnit()
     {
-        BasePlayerUnit playerUnit = new BasePlayerUnit();
+        BasePlayerUnit playerUnit = new BasePlayerUnit
+        {
+            name = name,
+            ID = ID,
+            unitType = unitTypes.PLAYER,
 
-        playerUnit.name = name;
-        playerUnit.ID = ID;
-        playerUnit.unitType = unitTypes.PLAYER;
+            unitRace = unitRace,
 
-        playerUnit.unitRace = unitRace;
+            level = level,
+            exp = exp,
+            maxExp = maxExp,
 
-        playerUnit.level = level;
-        playerUnit.exp = exp;
-        playerUnit.maxExp = maxExp;
+            learnedMagic = learnedMagic,
 
-        playerUnit.learnedMagic = learnedMagic;
-        
-        playerUnit.inventory = inventory;
+            inventory = inventory,
 
-        playerUnit.unitClass = unitClass;
+            unitClass = unitClass,
 
-        playerUnit.HP = HP;
-        playerUnit.MP = MP;
-        playerUnit.maxHP = maxHP;
-        playerUnit.maxMP = maxMP;
+            HP = HP,
+            MP = MP,
+            maxHP = maxHP,
+            maxMP = maxMP,
 
-        playerUnit.attack = attack;
-        playerUnit.defense = defense;
-        playerUnit.agility = agility;
-        playerUnit.move = move;
+            attack = attack,
+            defense = defense,
+            agility = agility,
+            move = move,
 
-        playerUnit.unitPrefab = unitPrefab;
+            unitPrefab = unitPrefab
+        };
 
         playerUnit.unitRace = unitRace;
 

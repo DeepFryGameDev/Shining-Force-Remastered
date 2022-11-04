@@ -15,8 +15,10 @@ MonoBehaviour:
   ID: 0
   name: Test Gizmo
   unitRace: 2
-  HP: 5
-  maxHP: 5
+  level: 0
+  attackRange: 1
+  HP: 1
+  maxHP: 1
   MP: 0
   maxMP: 0
   attack: 8
