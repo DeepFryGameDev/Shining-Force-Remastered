@@ -424,6 +424,7 @@ namespace DeepFry
                         tile.f = tile.g + tile.h;
 
                         //Debug.Log("Adding to openList: " + tile.name);
+
                         // maybe here verify tile is valid
                         openList.Add(tile);
                     }

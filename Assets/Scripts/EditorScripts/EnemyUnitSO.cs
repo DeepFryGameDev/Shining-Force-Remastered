@@ -16,9 +16,15 @@ public class EnemyUnitSO : ScriptableObject
     public int HP, maxHP, MP, maxMP;
     public int attack, defense, agility, move;
 
-    public GameObject unitPrefab;    
+    public MagicSO[] learnedMagic;
 
-    public BaseEnemyUnit GetEnemyUnit()
+    public BaseItemSO[] items;
+
+    public GameObject unitPrefab;
+
+    public bool boss;
+
+    public BaseEnemyUnit GetEnemyUnit(int battleID)
     {
         BaseEnemyUnit enemyUnit = new BaseEnemyUnit
         {
@@ -36,11 +42,19 @@ public class EnemyUnitSO : ScriptableObject
             agility = agility,
             move = move,
 
+            learnedMagic = learnedMagic,
+
+            items = items,
+
             attackRange = attackRange,
 
             unitPrefab = unitPrefab,
 
-            unitRace = unitRace
+            battleID = battleID,
+
+            unitRace = unitRace,
+
+            boss = boss
         };
 
         return enemyUnit;

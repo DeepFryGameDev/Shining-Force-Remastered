@@ -73,6 +73,7 @@ namespace DeepFry
                     {
                         if (Input.GetKeyDown("e"))
                         {
+                            Debug.Log("Here now");
                             Invoke(hoveredButton.GetComponent<MenuIconBehavior>().commandMethod, 0f);
                         }
 
@@ -201,9 +202,16 @@ namespace DeepFry
             currentPlayerUnit = (BasePlayerUnit)bsm.currentUnit;
 
             // confirm if unit has anything in inventory. if nothing, play cancel SE and don't open menu. otherwise, proceed
-            if (currentPlayerUnit.inventory.Length > 0)
+            if (currentPlayerUnit.HasItemsInInventory())
             {
-                mim.SetAndShowUnitItems(currentPlayerUnit);
+                if (imm == itemMenuModes.EQUIP)
+                {
+                    mim.SetAndShowUnitEquipment(currentPlayerUnit);
+                } else
+                {
+                    mim.SetAndShowUnitItems(currentPlayerUnit);
+                }
+                
                 HideMenu(mainMenu);
                 HideMenu(magicItemMenu);
                 ShowMenu(magicItemMenu, 0);
@@ -243,28 +251,40 @@ namespace DeepFry
 
         void UseItemButtonPressed()
         {
-            OpenInventory(itemMenuModes.USE);
+            if (menuState == menuStates.ITEM)
+            {
+                OpenInventory(itemMenuModes.USE);
+            }            
         }
 
         void EquipItemButtonPressed()
         {
-            Debug.Log("Equip Item button pressed");
+            if (menuState == menuStates.ITEM)
+            {
+                Debug.Log("Equip Item button pressed");
 
-            OpenInventory(itemMenuModes.EQUIP);
+                OpenInventory(itemMenuModes.EQUIP);
+            }            
         }
 
         void DropItemButtonPressed()
         {
-            Debug.Log("Drop Item button pressed");
+            if (menuState == menuStates.ITEM)
+            {
+                Debug.Log("Drop Item button pressed");
 
-            OpenInventory(itemMenuModes.DROP);
+                OpenInventory(itemMenuModes.DROP);
+            }
         }
 
         void GiveItemButtonPressed()
         {
-            Debug.Log("Give Item button pressed");
+            if (menuState == menuStates.ITEM)
+            {
+                Debug.Log("Give Item button pressed");
 
-            OpenInventory(itemMenuModes.GIVE);
+                OpenInventory(itemMenuModes.GIVE);
+            }
         }
 
         void MagicButtonPressed()

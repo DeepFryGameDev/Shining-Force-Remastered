@@ -5,7 +5,7 @@ namespace DeepFry
 {
     public class TestAction : MonoBehaviour
     {
-        public List<EnemyUnitSO> enemyList;
+        public List<BaseEnemyEncounter> enemyList;
 
         // Start is called before the first frame update
         void Start()
@@ -26,7 +26,7 @@ namespace DeepFry
                 Debug.Log("Start battle");
                 Debug.Log("---");
 
-                BattleInit.InitializeBattle(DB.GameDB.playerUnits, enemyList);
+                BattleInit.InitializeBattle(enemyList);
             }
         }
     }

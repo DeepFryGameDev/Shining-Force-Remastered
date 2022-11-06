@@ -61,7 +61,7 @@ namespace DeepFry
         public selectModes selectMode;
         public targetModes targetMode;
 
-        int tempTargetRange;
+        int tempTargetRange, tempEffectRange;
 
         public GameObject mainCam, selectionCam, orbitalCam, tileSelectCursor;
 
@@ -83,6 +83,7 @@ namespace DeepFry
         MagicProcessing mp;
         ItemProcessing ip;
         AttackProcessing ap;
+        BattleMenu bm;
         
 
         void Start()
@@ -101,6 +102,8 @@ namespace DeepFry
             ip = FindObjectOfType<ItemProcessing>();
 
             ap = FindObjectOfType<AttackProcessing>();
+
+            bm = FindObjectOfType<BattleMenu>();
 
             camMoveReady = false;
 
@@ -257,8 +260,22 @@ namespace DeepFry
                                 }
                                 else if (ttp.currentItem != null)
                                 {
-                                    targetUnit = ttp.GetFirstAvailableTarget(ttp.currentItem.targetType);
-                                    tempTargetRange = ttp.currentItem.targetRange;
+                                    //Debug.Log("Menu state: " + bm.itemMenuMode); // something else
+
+                                    switch (bm.itemMenuMode)
+                                    {
+                                        case itemMenuModes.USE:
+                                            targetUnit = ttp.GetFirstAvailableTarget(ttp.currentUsableItem.targetType);
+                                            tempTargetRange = ttp.currentUsableItem.targetRange;
+                                            tempEffectRange = ttp.currentUsableItem.effectRange;
+                                            break;
+
+                                        case itemMenuModes.GIVE:
+                                            targetUnit = ttp.GetFirstAvailableTarget(bm.itemMenuMode,TargetTypes.PLAYER);
+                                            tempTargetRange = 1;
+                                            tempEffectRange = 0;
+                                            break;
+                                    }                                 
                                 }
                                 else
                                 {
@@ -268,7 +285,7 @@ namespace DeepFry
                                 }
                             }
 
-                            if (bsm.currentUnit.unitType == unitTypes.ENEMY)
+                            if (bsm.currentUnit.unitType == unitTypes.ENEMY) // <-- idk wtf this is
                             {
                                 if (bsm.currentUnit.unitType == unitTypes.PLAYER)
                                 {
@@ -301,17 +318,17 @@ namespace DeepFry
                                 // show tile range
 
                                 selectableTiles.Clear();
-                                List<Tile> effectTiles = new List<Tile>();
+                                List<Tile> targetTiles = new List<Tile>();
 
                                 if (ttp.currentItem == null && ttp.currentMagic == null) // attack
                                 {
-                                    effectTiles = ttp.GetTileRange(tempTargetRange, ttp.GetTileAtPos(bsm.currentUnit.GetUnitObject().transform.position));
+                                    targetTiles = ttp.GetTargetTiles(bsm.currentUnit.GetTile(), tempTargetRange);
                                 } else // magic or item
                                 {
-                                    effectTiles = ttp.GetTileRange(tempTargetRange, ttp.GetTileAtPos(tempPos));
+                                    targetTiles = ttp.GetTargetTiles(bsm.currentUnit.GetTile(), tempTargetRange);
                                 }
                                 
-                                foreach (Tile tile in effectTiles)
+                                foreach (Tile tile in targetTiles)
                                 {
                                     selectableTiles.Add(tile);
                                 }
@@ -402,6 +419,8 @@ namespace DeepFry
 
             if (Input.GetKeyDown("e"))
             {
+                Debug.Log("Doing it in here");
+
                 targetUnit = ttp.GetUnitOnTile(GetTileSelectCursorTile());
 
                 if (ttp.currentMagic != null)

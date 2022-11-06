@@ -17,7 +17,8 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 90ac31c2350c67e4bb8690dc3d202cef, type: 3}
   gilValue: 10
   itemType: 0
-  targetRange: 1
+  usableType: 0
+  targetRange: 2
   targetType: 1
-  effectRange: 1
+  effectRange: 0
   effectValue: 10

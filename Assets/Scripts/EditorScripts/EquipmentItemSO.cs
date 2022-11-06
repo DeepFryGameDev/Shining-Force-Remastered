@@ -12,8 +12,6 @@ public class EquipmentItemSO : BaseItemSO
 
     public int attack;
 
-    public bool equipped;
-
 
     // Start is called before the first frame update
     void Start()
@@ -36,13 +34,15 @@ public class EquipmentItemSO : BaseItemSO
 
             icon = icon,
 
+            gilValue = gilValue,
+
             equipType = equipType,
 
             attack = attack,
 
-            equipped = equipped,
+            attackRange = attackRange,
 
-            attackRange = attackRange
+            itemType = ItemTypes.EQUIPMENT
         };
 
 

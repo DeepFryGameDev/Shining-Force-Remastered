@@ -42,7 +42,13 @@ namespace DeepFry
             mpText.text = unit.MP + " / " + unit.maxMP;
 
             hpSlider.fillAmount = unit.HP / unit.maxHP;
-            mpSlider.fillAmount = unit.MP / unit.maxMP;
+            if (unit.maxMP == 0) // cannot use magic
+            {
+                mpSlider.fillAmount = 0;
+            } else
+            {
+                mpSlider.fillAmount = unit.MP / unit.maxMP;
+            }            
             
             cg.alpha = 1;
             

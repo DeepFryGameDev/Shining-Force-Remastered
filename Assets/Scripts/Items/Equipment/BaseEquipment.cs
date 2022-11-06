@@ -11,6 +11,4 @@ public class BaseEquipment : BaseItem
     public int attackRange;
 
     public int attack;
-
-    public bool equipped;
 }

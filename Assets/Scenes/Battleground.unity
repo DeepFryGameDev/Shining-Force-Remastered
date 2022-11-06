@@ -4031,13 +4031,14 @@ GameObject:
   - component: {fileID: 280074553}
   - component: {fileID: 280074555}
   - component: {fileID: 280074554}
+  - component: {fileID: 280074556}
   m_Layer: 5
   m_Name: MessageTextBG
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &280074553
 RectTransform:
   m_ObjectHideFlags: 0
@@ -4096,6 +4097,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 280074552}
   m_CullTransparentMesh: 1
+--- !u!225 &280074556
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 280074552}
+  m_Enabled: 1
+  m_Alpha: 0
+  m_Interactable: 0
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1001 &282156007
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -7129,6 +7142,7 @@ GameObject:
   - component: {fileID: 484292522}
   - component: {fileID: 484292524}
   - component: {fileID: 484292523}
+  - component: {fileID: 484292525}
   m_Layer: 0
   m_Name: TargetUnitDetailsPanel
   m_TagString: Untagged
@@ -7201,6 +7215,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 484292521}
   m_CullTransparentMesh: 1
+--- !u!225 &484292525
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 484292521}
+  m_Enabled: 1
+  m_Alpha: 0
+  m_Interactable: 0
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &491807255
 GameObject:
   m_ObjectHideFlags: 0
@@ -19281,9 +19307,11 @@ MonoBehaviour:
   targetMPText: {fileID: 715119828}
   HPBar: {fileID: 1230221605}
   MPBar: {fileID: 1801171596}
-  ciCanvasGroup: {fileID: 1601986479}
+  ciCanvasGroup: {fileID: 0}
   messageTextBG: {fileID: 280074552}
   messageText: {fileID: 821659992}
+  messageCG: {fileID: 280074556}
+  detailsPanelCG: {fileID: 484292525}
 --- !u!4 &1190962510
 Transform:
   m_ObjectHideFlags: 0
@@ -26470,7 +26498,6 @@ GameObject:
   - component: {fileID: 1601986478}
   - component: {fileID: 1601986477}
   - component: {fileID: 1601986476}
-  - component: {fileID: 1601986479}
   m_Layer: 5
   m_Name: CombatInteractionCanvas
   m_TagString: Untagged
@@ -26560,18 +26587,6 @@ Canvas:
   m_SortingLayerID: 0
   m_SortingOrder: 1
   m_TargetDisplay: 0
---- !u!225 &1601986479
-CanvasGroup:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1601986474}
-  m_Enabled: 1
-  m_Alpha: 0
-  m_Interactable: 1
-  m_BlocksRaycasts: 1
-  m_IgnoreParentGroups: 0
 --- !u!1 &1612104740
 GameObject:
   m_ObjectHideFlags: 0
@@ -36606,6 +36621,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 241818297}
     m_Modifications:
+    - target: {fileID: 6412772182257818470, guid: 67ecd6bf37e31eb41b96fee220f2a13e, type: 3}
+      propertyPath: blankIcon
+      value: 
+      objectReference: {fileID: 21300000, guid: 78c475c8253411b409578fe050061c54, type: 3}
     - target: {fileID: 6412772182257818470, guid: 67ecd6bf37e31eb41b96fee220f2a13e, type: 3}
       propertyPath: hoveredBlinkTime
       value: 0.125

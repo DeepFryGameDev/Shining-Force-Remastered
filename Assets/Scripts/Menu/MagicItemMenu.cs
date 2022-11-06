@@ -39,6 +39,14 @@ namespace DeepFry
 
         BasePlayerUnit currentBPU;
 
+        public Sprite blankIcon;
+
+        Image topIcon, rightIcon, bottomIcon, leftIcon;
+        Image topBorder, rightBorder, bottomBorder, leftBorder;
+        MenuIconBehavior topMIB, rightMIB, bottomMIB, leftMIB;
+
+        TMP_Text menuText;
+
         // Start is called before the first frame update
         void Start()
         {
@@ -51,6 +59,25 @@ namespace DeepFry
 
             highlightColor = new Color(255, 255, 255, 255);
             transparentColor = new Color(255, 255, 255, 0);
+
+            // set button stuff
+            topIcon = menuPanel.transform.Find("TopButton/Icon").GetComponent<Image>();
+            rightIcon = menuPanel.transform.Find("RightButton/Icon").GetComponent<Image>();
+            bottomIcon = menuPanel.transform.Find("BottomButton/Icon").GetComponent<Image>();
+            leftIcon = menuPanel.transform.Find("LeftButton/Icon").GetComponent<Image>();
+
+            topBorder = menuPanel.transform.Find("TopButton/HighlightBorder").GetComponent<Image>();
+            rightBorder = menuPanel.transform.Find("RightButton/HighlightBorder").GetComponent<Image>();
+            bottomBorder = menuPanel.transform.Find("BottomButton/HighlightBorder").GetComponent<Image>();
+            leftBorder = menuPanel.transform.Find("LeftButton/HighlightBorder").GetComponent<Image>();
+
+            topMIB = menuPanel.transform.Find("TopButton").GetComponent<MenuIconBehavior>();
+            rightMIB = menuPanel.transform.Find("RightButton").GetComponent<MenuIconBehavior>();
+            bottomMIB = menuPanel.transform.Find("BottomButton").GetComponent<MenuIconBehavior>();
+            leftMIB = menuPanel.transform.Find("LeftButton").GetComponent<MenuIconBehavior>();
+
+            // set ui stuff
+            menuText = GameObject.Find("MagicItemMenu/TextBG/MenuText").GetComponent<TMP_Text>();
         }
 
         // Update is called once per frame
@@ -70,29 +97,74 @@ namespace DeepFry
             {
                 switch (menuMode)
                 {
-                    case MagicItemMenuModes.ITEM:                        
-
+                    case MagicItemMenuModes.ITEM:
                         switch (bm.itemMenuMode)
                         {
                             case itemMenuModes.USE:
-                                UsableItemSO uisou = (UsableItemSO)currentBPU.inventory[hoveredButtonVal];
-                                ip.ItemChosen(uisou.GetBaseItem(), currentBPU);
+                                BaseUsableItem item = currentBPU.inventory[hoveredButtonVal].GetBaseUsableItem();
+                                ip.PrepareItemTileSelection(item, currentBPU);
                                 break;
                             case itemMenuModes.EQUIP:
                                 Debug.Log("Equip chosen in menu");
+                                HideMenu();
+                                switch (hoveredButtonVal)
+                                {
+                                    case 0:
+                                        StartCoroutine(ip.EquipItem(currentBPU, topMIB.GetItem()));
+                                        break;
+                                    case 1:
+                                        StartCoroutine(ip.EquipItem(currentBPU, rightMIB.GetItem()));
+                                        break;
+                                    case 2:
+                                        StartCoroutine(ip.EquipItem(currentBPU, bottomMIB.GetItem()));
+                                        break;
+                                    case 3:
+                                        StartCoroutine(ip.EquipItem(currentBPU, leftMIB.GetItem()));
+                                        break;
+                                }
+                                
                                 break;
                             case itemMenuModes.DROP:
                                 Debug.Log("Drop chosen in menu");
-                                UsableItemSO uisod = (UsableItemSO)currentBPU.inventory[hoveredButtonVal];
-                                ip.RemoveFromInventory(uisod.GetBaseItem(), currentBPU);
+                                HideMenu();
+                                StartCoroutine(ip.DropItem(currentBPU, currentBPU.inventory[hoveredButtonVal]));
                                 break;
                             case itemMenuModes.GIVE:
                                 Debug.Log("Give chosen in menu");
+                                HideMenu();
+                                if (currentBPU.inventory[hoveredButtonVal].itemType == ItemTypes.USABLE)
+                                {
+                                    BaseUsableItem giveUsableItem = currentBPU.inventory[hoveredButtonVal].GetBaseUsableItem();
+                                    ip.PrepareItemTileSelection(giveUsableItem, currentBPU);
+                                }
+                                if (currentBPU.inventory[hoveredButtonVal].itemType == ItemTypes.EQUIPMENT)
+                                {
+                                    BaseEquipment giveEquip = null;
+
+                                    switch (hoveredButtonVal)
+                                    {
+                                        case 0:
+                                            giveEquip = DB.GameDB.GetEquipmentItem(topMIB.GetItem().ID);
+                                            break;
+                                        case 1:
+                                            giveEquip = DB.GameDB.GetEquipmentItem(rightMIB.GetItem().ID);
+                                            break;
+                                        case 2:
+                                            giveEquip = DB.GameDB.GetEquipmentItem(bottomMIB.GetItem().ID);
+                                            break;
+                                        case 3:
+                                            giveEquip = DB.GameDB.GetEquipmentItem(leftMIB.GetItem().ID);
+                                            break;
+                                    }
+
+                                    ip.PrepareItemTileSelection(giveEquip, currentBPU);
+                                }
+
                                 break;
                         }                        
                         break;
                     case MagicItemMenuModes.MAGIC:
-                        mp.MagicChosen(currentBPU.learnedMagic[hoveredButtonVal].GetBaseMagic(), currentBPU);
+                        mp.MagicChosen(currentBPU.learnedMagicSOs[hoveredButtonVal].GetBaseMagic(), currentBPU);
                         break;
                 }                
             }
@@ -103,19 +175,19 @@ namespace DeepFry
                 SetHighlight();
             }
 
-            if (Input.GetKeyDown("d") && currentBPU.inventory.Length >= 2)
+            if (Input.GetKeyDown("d") && (rightMIB.GetItem() != null || rightMIB.GetMagic() != null))
             {
                 hoveredButtonVal = 1;
                 SetHighlight();
             }
 
-            if (Input.GetKeyDown("s") && currentBPU.inventory.Length >= 3)
+            if (Input.GetKeyDown("s") && (bottomMIB.GetItem() != null || bottomMIB.GetMagic() != null))
             {
                 hoveredButtonVal = 2;
                 SetHighlight();
             }
 
-            if (Input.GetKeyDown("a") && currentBPU.inventory.Length >= 4)
+            if (Input.GetKeyDown("a") && (leftMIB.GetItem() != null || leftMIB.GetMagic() != null))
             {
                 hoveredButtonVal = 3;
                 SetHighlight();
@@ -123,7 +195,7 @@ namespace DeepFry
 
             if (Input.GetKeyDown("c"))
             {
-                
+                HideMenu();
             }
         }
 
@@ -134,8 +206,8 @@ namespace DeepFry
 
             // for each magic learned by player unit, fill in menu UI going clockwise(might need to change)
 
-            GameObject.Find("MagicItemMenu/TextBG/MenuText").GetComponent<TMP_Text>().text = bpu.learnedMagic[hoveredButtonVal].name;
-            GameObject.Find("MagicItemMenu/MenuPanel/TopButton/Icon").GetComponent<Image>().sprite = bpu.learnedMagic[hoveredButtonVal].icon;
+            menuText.text = bpu.learnedMagicSOs[hoveredButtonVal].name;
+            topIcon.sprite = bpu.learnedMagicSOs[hoveredButtonVal].icon;
 
             //bottomButton.GetComponent<MenuIconBehavior>().hovered = true;
             hoveredButtonVal = 0;
@@ -147,28 +219,80 @@ namespace DeepFry
 
         public void SetAndShowUnitItems(BasePlayerUnit bpu)
         {
+            ResetItemButtons();
+
             currentBPU = (BasePlayerUnit)bpu;
             Debug.Log("CurrentBPU: " + currentBPU.name);
 
             // for each item in bpu's inventory, fill in menu UI going clockwise(might need to change)
+            int index = 0;
 
-            GameObject.Find("MagicItemMenu/TextBG/MenuText").GetComponent<TMP_Text>().text = bpu.inventory[0].name;
-            GameObject.Find("MagicItemMenu/MenuPanel/TopButton/Icon").GetComponent<Image>().sprite = bpu.inventory[0].icon;
+            foreach (BaseItem item in bpu.inventory)
+            {
+                switch (index)
+                {
+                    case 0:
+                        topIcon.sprite = item.icon;
+                        topMIB.SetItem(item);
+                        break;
+                    case 1:
+                        rightIcon.sprite = item.icon;
+                        rightMIB.SetItem(item);
+                        break;
+                    case 2:
+                        bottomIcon.sprite = item.icon;
+                        bottomMIB.SetItem(item);
+                        break;
+                    case 3:
+                        leftIcon.sprite = item.icon;
+                        leftMIB.SetItem(item);
+                        break;
+                }
+                index++;
+            } 
 
-            if (bpu.inventory.Length > 1)
+            hoveredButtonVal = 0;
+
+            SetHighlight();
+
+            menuOpen = true;
+        }
+
+        public void SetAndShowUnitEquipment(BasePlayerUnit bpu)
+        {
+            ResetItemButtons();
+
+            currentBPU = (BasePlayerUnit)bpu;
+
+            // for each item in bpu's inventory, fill in menu UI going clockwise(might need to change)
+            int index = 0;
+
+            foreach (BaseItem item in bpu.inventory)
             {
-                GameObject.Find("MagicItemMenu/MenuPanel/RightButton/Icon").GetComponent<Image>().sprite = bpu.inventory[1].icon;
+                if (item.itemType == ItemTypes.EQUIPMENT)
+                {
+                    switch (index)
+                    {
+                        case 0:
+                            topIcon.sprite = item.icon;
+                            topMIB.SetItem(item);
+                            break;
+                        case 1:
+                            rightIcon.sprite = item.icon;
+                            rightMIB.SetItem(item);
+                            break;
+                        case 2:
+                            bottomIcon.sprite = item.icon;
+                            bottomMIB.SetItem(item);
+                            break;
+                        case 3:
+                            leftIcon.sprite = item.icon;
+                            leftMIB.SetItem(item);
+                            break;
+                    }
+                    index++;
+                }
             }
-            
-            if (bpu.inventory.Length > 2)
-            {
-                GameObject.Find("MagicItemMenu/MenuPanel/BottomButton/Icon").GetComponent<Image>().sprite = bpu.inventory[2].icon;
-            }
-            
-            if (bpu.inventory.Length > 3)
-            {
-                GameObject.Find("MagicItemMenu/MenuPanel/LeftButton/Icon").GetComponent<Image>().sprite = bpu.inventory[3].icon;
-            }            
 
             //bottomButton.GetComponent<MenuIconBehavior>().hovered = true;
             hoveredButtonVal = 0;
@@ -178,27 +302,44 @@ namespace DeepFry
             menuOpen = true;
         }
 
+        void ResetItemButtons()
+        {
+            topIcon.sprite = blankIcon;
+            topMIB.ResetButton();
+
+            rightIcon.sprite = blankIcon;
+            rightMIB.ResetButton();
+
+            bottomIcon.sprite = blankIcon;
+            bottomMIB.ResetButton();
+
+            leftIcon.sprite = blankIcon;
+            leftMIB.ResetButton();
+        }
+
         void SetHighlight()
         {
             switch (hoveredButtonVal)
             {
                 case 0:
-                    highlightBorder = menuPanel.transform.Find("TopButton/HighlightBorder").GetComponent<Image>();
-                    highlightBorder.GetComponent<Image>().color = highlightColor;
+                    highlightBorder = topBorder;                    
+                    menuText.text = topMIB.GetItem().name;
                     break;
                 case 1:
-                    highlightBorder = menuPanel.transform.Find("RightButton/HighlightBorder").GetComponent<Image>();
-                    highlightBorder.GetComponent<Image>().color = highlightColor;
+                    highlightBorder = rightBorder;
+                    menuText.text = rightMIB.GetItem().name;
                     break;
                 case 2:
-                    highlightBorder = menuPanel.transform.Find("BottomButton/HighlightBorder").GetComponent<Image>();
-                    highlightBorder.GetComponent<Image>().color = highlightColor;
+                    highlightBorder = bottomBorder;
+                    menuText.text = bottomMIB.GetItem().name;
                     break;
                 case 3:
-                    highlightBorder = menuPanel.transform.Find("LeftButton/HighlightBorder").GetComponent<Image>();
-                    highlightBorder.GetComponent<Image>().color = highlightColor;
+                    highlightBorder = leftBorder;
+                    menuText.text = leftMIB.GetItem().name;
                     break;
             }
+
+            highlightBorder.color = highlightColor;
         }
 
         void ProcessHighlight()
@@ -228,6 +369,12 @@ namespace DeepFry
             bm.HideMenu(gameObject);
 
             menuOpen = false;
+        }
+
+        public void ShowMenu()
+        {
+            bm.ShowMenu(gameObject, 0);
+            menuOpen = true;
         }
     }
 }

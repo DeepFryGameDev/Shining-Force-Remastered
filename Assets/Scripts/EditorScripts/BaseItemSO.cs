@@ -1,6 +1,8 @@
+using DeepFry;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using static Cinemachine.DocumentationSortingAttribute;
 
 public class BaseItemSO : ScriptableObject
 {
@@ -12,6 +14,19 @@ public class BaseItemSO : ScriptableObject
     public int gilValue;
 
     public ItemTypes itemType;
+
+    public BaseItem GetItem()
+    {
+        BaseItem item = new BaseItem
+        {
+            ID = ID,
+            name = name,
+            icon = icon,
+            gilValue = gilValue,
+            itemType = itemType
+        };
+        return item;
+    }
 
     // Start is called before the first frame update
     void Start()

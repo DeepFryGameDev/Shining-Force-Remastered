@@ -14,6 +14,9 @@ namespace DeepFry
 
         public string commandMethod;
 
+        BaseItem item;
+        BaseMagic magic;
+
         bool started, showingDefault;
 
         float animTime = 0.25f;
@@ -50,6 +53,34 @@ namespace DeepFry
                     StopAnimation();
                 }
             }
+        }
+
+        public void SetItem(BaseItem itemToSet)
+        {
+            magic = null;
+            item = itemToSet;
+        }
+
+        public void SetMagic(BaseMagic magicToSet)
+        {
+            magic = magicToSet;
+            item = null;
+        }
+
+        public void ResetButton()
+        {
+            item = null;
+            magic = null;
+        }
+
+        public BaseItem GetItem()
+        {
+            return item;
+        }
+
+        public BaseMagic GetMagic()
+        {
+            return magic;
         }
 
         IEnumerator AnimateIcon()

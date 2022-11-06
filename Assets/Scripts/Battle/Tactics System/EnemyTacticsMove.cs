@@ -243,7 +243,7 @@ namespace DeepFry
         IEnumerator PostMove()
         {
             // Check if targets in range (get number of tiles traversed to target tile, and verify that tile is within monster's reach)
-            List<Tile> targetTiles = ttp.GetTargetTiles(enemyUnit.attackRange);
+            List<Tile> targetTiles = ttp.GetTargetTiles(unit.GetTile(), enemyUnit.attackRange);
             
             List<BaseUnit> targetList = new List<BaseUnit>();
             targetList.Add(targetUnit); // <--- this and the line above will need to be adjusted

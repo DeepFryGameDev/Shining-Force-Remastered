@@ -30,6 +30,9 @@ namespace DeepFry
         public GameObject messageTextBG;
         public TMP_Text messageText;
 
+        public CanvasGroup messageCG;
+        public CanvasGroup detailsPanelCG;
+
         bool messageStarted, messageInterrupt;
 
         MoveCanvas mc;
@@ -57,6 +60,7 @@ namespace DeepFry
         {
             if (messageStarted && Input.GetKeyDown("e"))
             {
+                Debug.Log("Message interrupted");
                 messageInterrupt = true;
             }
         }
@@ -145,6 +149,8 @@ namespace DeepFry
 
             // zoom camera and show unit details for primary unit --------------------------------------------------------
             UpdateUnitUI(combatInteraction.primaryUnit);
+
+            ShowDetailsPanel(true);
 
             StartCoroutine(ts.MoveCamera(ts.mainCam, combatInteraction.primaryUnit));
 
@@ -632,14 +638,13 @@ namespace DeepFry
             return Random.Range(min, max + 1);
         }
 
-        IEnumerator DisplayMessage(string message, float timeToWait)
+        public IEnumerator DisplayMessage(string message, float timeToWait)
         {
             Debug.Log("~-~-~-~-~-~ Message: " + message + " ~-~-~-~-~-~");
 
-            if (!messageTextBG.activeInHierarchy)
+            if (messageCG.alpha == 0)
             {
-                messageTextBG.SetActive(true);
-                messageTextBG.transform.parent.GetComponent<CanvasGroup>().alpha = 1;
+                messageCG.alpha = 1;
             }
 
             int index = 0;
@@ -691,13 +696,23 @@ namespace DeepFry
             }
         }
 
-        void ClearMessageText()
+        public void ClearMessageText()
         {
-            if (messageTextBG.activeInHierarchy)
+            if (messageCG.alpha == 1)
             {
-                messageTextBG.SetActive(false);
-                messageTextBG.transform.parent.GetComponent<CanvasGroup>().alpha = 0;
+                messageCG.alpha = 0;
                 messageText.text = String.Empty;
+            }
+        }
+
+        void ShowDetailsPanel(bool show)
+        {
+            if (show)
+            {
+                detailsPanelCG.alpha = 1;
+            } else
+            {
+                detailsPanelCG.alpha = 0;
             }
         }
 
@@ -737,6 +752,9 @@ namespace DeepFry
 
         void CleanUpCombatInteraction()
         {
+            // hide details panel
+            ShowDetailsPanel(false);
+
             // hide combat interaction UI
             ClearMessageText();
 

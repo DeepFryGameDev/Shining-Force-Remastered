@@ -18,8 +18,7 @@ MonoBehaviour:
   exp: 0
   maxExp: 0
   level: 1
-  learnedMagic: []
-  inventory: []
+  unitClass: 2
   HP: 11
   maxHP: 11
   MP: 0
@@ -28,4 +27,6 @@ MonoBehaviour:
   defense: 5
   agility: 7
   move: 7
-  unitPrefab: {fileID: 0}
+  learnedMagic: []
+  items: []
+  unitPrefab: {fileID: 4700797944403510348, guid: f6c76f89ec542cd489bfdc360618bd7b, type: 3}

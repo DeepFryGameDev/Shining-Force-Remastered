@@ -19,11 +19,6 @@ MonoBehaviour:
   maxExp: 0
   level: 1
   unitClass: 0
-  learnedMagic:
-  - {fileID: 11400000, guid: 67413879a23f8b844be36a210d6a1606, type: 2}
-  inventory:
-  - {fileID: 11400000, guid: 126b2f868c431ba41b296792183fa1a8, type: 2}
-  - {fileID: 11400000, guid: a244e35113cf8a24a959d18dab240b3d, type: 2}
   HP: 7
   maxHP: 12
   MP: 8
@@ -32,4 +27,9 @@ MonoBehaviour:
   defense: 4
   agility: 6
   move: 6
+  learnedMagic:
+  - {fileID: 11400000, guid: 67413879a23f8b844be36a210d6a1606, type: 2}
+  items:
+  - {fileID: 11400000, guid: 126b2f868c431ba41b296792183fa1a8, type: 2}
+  - {fileID: 11400000, guid: a244e35113cf8a24a959d18dab240b3d, type: 2}
   unitPrefab: {fileID: 845501013087777604, guid: 3c5a0a815ab5e114d921120f4f8bc285, type: 3}

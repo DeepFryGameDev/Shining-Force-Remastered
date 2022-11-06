@@ -30,6 +30,22 @@ namespace DeepFry
 
         public Sprite icon;
 
+        public int gilValue;
+
         public ItemTypes itemType;
+
+        public BaseUsableItem GetBaseUsableItem()
+        {
+            BaseUsableItem item = new BaseUsableItem
+            {
+                ID = ID,
+                name = name,
+                icon = icon,
+                gilValue = gilValue,
+                itemType = itemType
+            };
+
+            return item;
+        }
     }
 }

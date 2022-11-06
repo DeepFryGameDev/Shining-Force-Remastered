@@ -13,7 +13,9 @@ namespace DeepFry
 
         public BaseTileTarget currentBTT;
         public BaseMagic currentMagic;
-        public BaseUsableItem currentItem;
+        public BaseItem currentItem;
+        public BaseUsableItem currentUsableItem;
+        public BaseEquipment currentEquipment;
 
         // Start is called before the first frame update
         void Start()
@@ -33,7 +35,7 @@ namespace DeepFry
             BaseTileTarget btt = new BaseTileTarget
             {
                 homeTile = bsm.TileStandingOn(unit.GetUnitObject()),
-                targetTiles = GetTargetTiles(magic.targetRange)
+                targetTiles = GetTargetTiles(unit.GetTile(), magic.targetRange)
             };
 
             currentBTT = btt;
@@ -45,36 +47,49 @@ namespace DeepFry
         {
             BaseTileTarget btt = new BaseTileTarget
             {
-                homeTile = bsm.TileStandingOn(unit.GetUnitObject()),
-                targetTiles = GetTargetTiles(item.targetRange)
+                homeTile = unit.GetTile(),
+                targetTiles = GetTargetTiles(unit.GetTile(), item.targetRange)
             };
 
             return btt;
         }
 
-        public BaseTileTarget GetBaseTileTarget(BaseUnit unit)
+        public BaseTileTarget GetBaseTileTarget(BaseUnit unit, BaseEquipment item) // for item 'GIVE' command primarily
+        {
+            BaseTileTarget btt = new BaseTileTarget
+            {
+                homeTile = unit.GetTile(),
+                targetTiles = GetTargetTiles(unit.GetTile(), 1)
+            };
+
+            return btt;
+        }
+
+        public BaseTileTarget GetBaseTileTarget(BaseUnit unit) // for attacks
         {
             BaseTileTarget btt = new BaseTileTarget
             {
                 homeTile = bsm.TileStandingOn(unit.GetUnitObject()),
-                targetTiles = GetTargetTiles(1)
+                targetTiles = GetTargetTiles(unit.GetTile(), 1)
             };
 
             return btt;
         }
 
-        public List<Tile> GetTargetTiles(int range) // Tiles for available targetting
+        public List<Tile> GetTargetTiles(Tile anchorTile, int range) // For getting target tiles
         {
+            Debug.Log("Getting target tiles from " + anchorTile.name + " for range: " + range);
+
             List<Tile> tiles = new List<Tile>();
-            float x = bsm.TileStandingOn(bsm.currentUnit.GetUnitObject()).transform.position.z;
-            float y = bsm.TileStandingOn(bsm.currentUnit.GetUnitObject()).transform.position.x;
+            float x = anchorTile.transform.position.z;
+            float y = anchorTile.transform.position.x;
 
             switch (range)
             {
                 case 0:
-                    // return tile player is standing on
+                    // return anchor tile
 
-                    tiles.Add(bsm.TileStandingOn(bsm.currentUnit.GetUnitObject()));
+                    tiles.Add(anchorTile);
 
                     return tiles;
 
@@ -135,8 +150,9 @@ namespace DeepFry
             }
         }
 
-        public List<Tile> GetTileRange(int range, Tile anchorTile) // Tiles for range of effect
+        public List<Tile> GetEffectTiles(Tile anchorTile, int range) // For getting effect tiles
         {
+            Debug.Log("Getting tile range from " + anchorTile.name + " for range: " + range);
             List<Tile> tiles = new List<Tile>();
 
             switch (range)
@@ -227,46 +243,6 @@ namespace DeepFry
             return null;
         }
 
-        public BaseUnit GetUnitOnTile(Tile tile, TargetTypes targetType)
-        {
-            RaycastHit[] hits;
-
-            Vector3 posToTry = new Vector3(tile.transform.position.x, 1, tile.transform.position.z);
-
-            hits = Physics.RaycastAll(posToTry, Vector3.down, 5.0f);
-
-            for (int i = 0; i < hits.Length; i++)
-            {
-                switch (targetType)
-                {
-                    case TargetTypes.PLAYER:
-                        if (hits[i].collider.CompareTag("PlayerUnit"))
-                        {
-                            return hits[i].collider.GetComponent<TacticsMove>().unit;
-                        }
-                        break;
-                    case TargetTypes.ENEMY:
-                        if (hits[i].collider.CompareTag("EnemyUnit"))
-                        {
-                            return (BaseUnit)hits[i].collider.GetComponent<EnemyTacticsMove>().enemyUnit;
-                        }
-                        break;
-                    case TargetTypes.ANY:
-                        if (hits[i].collider.CompareTag("PlayerUnit"))
-                        {
-                            return hits[i].collider.GetComponent<TacticsMove>().unit;
-                        }
-
-                        if (hits[i].collider.CompareTag("EnemyUnit"))
-                        {
-                            return (BaseUnit)hits[i].collider.GetComponent<EnemyTacticsMove>().enemyUnit;
-                        }
-                        break;
-                }
-            }
-            return null;
-        }
-
         public BaseUnit GetFirstAvailableTarget(TargetTypes targetType)
         {
             if (targetType == TargetTypes.SELF)
@@ -276,12 +252,44 @@ namespace DeepFry
 
             foreach (Tile tile in currentBTT.targetTiles)
             {
-                if (GetUnitOnTile(tile, targetType) != null)
+                if (tile.GetUnitOnTile() != null)
                 {
-                    return GetUnitOnTile(tile, targetType);
+                    return tile.GetUnitOnTile();
                 }
-            }
+            }            
 
+            return null;
+        }
+
+        public BaseUnit GetFirstAvailableTarget(itemMenuModes imm, TargetTypes targetType)
+        {
+            switch (imm)
+            {
+                case itemMenuModes.USE:
+                    if (targetType == TargetTypes.SELF)
+                    {
+                        return GetUnitOnTile(currentBTT.homeTile);
+                    }
+
+                    foreach (Tile tile in currentBTT.targetTiles)
+                    {
+                        if (tile.GetUnitOnTile() != null)
+                        {
+                            return tile.GetUnitOnTile();
+                        }
+                    }
+                    break;
+                case itemMenuModes.GIVE:
+                    List<Tile> giveTiles = GetTargetTiles(currentBTT.homeTile, 1);
+                    foreach (Tile tile in giveTiles)
+                    {
+                        if (tile.GetUnitOnTile() != null)
+                        {
+                            return tile.GetUnitOnTile();
+                        }
+                    }
+                    break;
+            }
             return null;
         }
     }

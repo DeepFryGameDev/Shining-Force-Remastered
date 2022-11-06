@@ -13,17 +13,18 @@ public class PlayerUnitSO : ScriptableObject
 
     public PlayerUnitClasses unitClass;
 
-    public MagicSO[] learnedMagic;
-
-    public BaseItemSO[] inventory;
-
     public int HP, maxHP, MP, maxMP;
     public int attack, defense, agility, move;
+
+    public MagicSO[] learnedMagic;
+
+    public BaseItemSO[] items;
 
     public GameObject unitPrefab;    
 
     public BasePlayerUnit GetPlayerUnit()
     {
+        Debug.LogWarning("Getting player unit for " + name);
         BasePlayerUnit playerUnit = new BasePlayerUnit
         {
             name = name,
@@ -36,9 +37,9 @@ public class PlayerUnitSO : ScriptableObject
             exp = exp,
             maxExp = maxExp,
 
-            learnedMagic = learnedMagic,
+            learnedMagicSOs = learnedMagic,
 
-            inventory = inventory,
+            items = items,
 
             unitClass = unitClass,
 

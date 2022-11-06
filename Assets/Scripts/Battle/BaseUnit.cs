@@ -28,15 +28,27 @@ namespace DeepFry
         public int HP, maxHP, MP, maxMP;
         public int attack, defense, agility, move;
 
+        public MagicSO[] learnedMagic;
+
+        public BaseItemSO[] items;
+
         public GameObject unitPrefab;
 
-        public GameObject unitObject;
+        public int battleID;
+
+        GameObject unitObject;
 
         int tileLayer = 1 << 6;
 
-        public void SetUnitObject(GameObject obj) { unitObject = obj; }
+        public void SetUnitObject(GameObject obj) 
+        {
+            unitObject = obj; 
+        }
 
-        public GameObject GetUnitObject() { return unitObject; }
+        public GameObject GetUnitObject() 
+        {
+            return unitObject; 
+        }
 
         public IEnumerator ResetAnimator()
         {
@@ -65,6 +77,8 @@ namespace DeepFry
 
             return tile;
         }
+
+        public BaseEnemyUnit GetBaseEnemyUnit() { return (BaseEnemyUnit)this; }
 
     }
 }

@@ -32,6 +32,12 @@ namespace DeepFry
         ANY
     }
 
+    struct UnitTurnCalc
+    {
+        public BaseUnit unit;
+        public float turnValue;
+    }
+
     public class BattleStateMachine : MonoBehaviour
     {
         public List<BaseUnit> activeUnits = new List<BaseUnit>();
@@ -68,13 +74,14 @@ namespace DeepFry
 
         MenuPrefabManager mpm;
 
+        Queue<BaseUnit> turnQueue = new Queue<BaseUnit>();
+
         // Start is called before the first frame update
         void Start()
         {
             cineCam = FindObjectOfType<Cinemachine.CinemachineFreeLook>();
-
-            InstantiateCombatants();
-            SortUnitOrder();
+                      
+            Init();
 
             TileMenuScripts.SetTileCoordinates();
 
@@ -94,6 +101,11 @@ namespace DeepFry
             selectableTilesFound = false;
         }
 
+        void Init()
+        {
+            InstantiateCombatants();
+        }
+
         // Update is called once per frame
         void Update()
         {
@@ -104,36 +116,46 @@ namespace DeepFry
         {
             activeUnits = BattleInit.combatants;
 
-            foreach (EnemyUnitSO euSO in BattleInit.enemyCombatants)
+            foreach (BaseEnemyEncounter bee in BattleInit.enemyCombatants)
             {
                 //Instantiate them
-                GameObject newObject = GameObject.Instantiate(euSO.unitPrefab, new Vector3(7, 0, 15), euSO.unitPrefab.transform.rotation, GameObject.Find("[Enemy Units]").transform);
+                GameObject newObject = GameObject.Instantiate(bee.enemy.unitPrefab, 
+                    new Vector3(bee.spawnCoordinates.y, 0, bee.spawnCoordinates.x), 
+                    bee.enemy.unitPrefab.transform.rotation, GameObject.Find("[Enemy Units]").transform);
 
                 foreach (BaseUnit unit in activeUnits)
                 {
-                    if (unit.unitType == unitTypes.ENEMY && euSO.ID == unit.ID)
+                    if (unit.unitType == unitTypes.ENEMY && unit.battleID == bee.battleID)
                     {
                         unit.SetUnitObject(newObject);
                         unit.GetUnitObject().GetComponent<TacticsMove>().unit = unit;
                         unit.GetUnitObject().GetComponent<EnemyTacticsMove>().enemyUnit = (BaseEnemyUnit)unit;
                         break;
                     }
+                    
                 }
 
                 newObject.GetComponent<EnemyTacticsMove>().Init();
             }
 
-            foreach (PlayerUnitSO puSO in BattleInit.playerCombatants)
+            foreach (BasePlayerUnit bpu in BattleInit.playerCombatants)
             {
-                GameObject newObject;
+                bpu.Init();
 
-                //Instantiate them
-                if (puSO.ID.Equals(0))
+                GameObject newObject = null;
+
+                //Instantiate them - this will need an overhaul later, but as there is only 1 fight, they can be instantiated in the same place
+                switch (bpu.ID)
                 {
-                    newObject = GameObject.Instantiate(puSO.unitPrefab, new Vector3(7, 0, 0), puSO.unitPrefab.transform.rotation, GameObject.Find("[Player Units]").transform);
-                } else 
-                {
-                    newObject = GameObject.Instantiate(puSO.unitPrefab, new Vector3(8, 0, 0), puSO.unitPrefab.transform.rotation, GameObject.Find("[Player Units]").transform);
+                    case 0: // bowie
+                        newObject = GameObject.Instantiate(bpu.unitPrefab, new Vector3(7, 0, 0), bpu.unitPrefab.transform.rotation, GameObject.Find("[Player Units]").transform);
+                        break;
+                    case 1: // sarah
+                        newObject = GameObject.Instantiate(bpu.unitPrefab, new Vector3(8, 0, 0), bpu.unitPrefab.transform.rotation, GameObject.Find("[Player Units]").transform);
+                        break;
+                    case 2: // chester
+                        newObject = GameObject.Instantiate(bpu.unitPrefab, new Vector3(6, 0, 0), bpu.unitPrefab.transform.rotation, GameObject.Find("[Player Units]").transform);
+                        break;
                 }
                 
 
@@ -144,7 +166,7 @@ namespace DeepFry
 
                 foreach (BaseUnit unit in activeUnits)
                 {
-                    if (unit.unitType == unitTypes.PLAYER && puSO.ID == unit.ID)
+                    if (unit.unitType == unitTypes.PLAYER && bpu.ID == unit.ID)
                     {
                         unit.SetUnitObject(newObject);
                         unit.GetUnitObject().GetComponent<TacticsMove>().unit = unit;
@@ -163,21 +185,14 @@ namespace DeepFry
                 newObject.SetActive(false);
                 newObject.SetActive(true);
             }
+
+            SetTurnOrder();
         }
 
-        void SortUnitOrder()
+        float GetRandomBetweenRange(float min, float max)
         {
-            activeUnits = activeUnits.OrderBy(x => x.agility).ToList(); // better formula will be put in place later
-
-            activeUnits.Reverse(); // Sets highest speed first
-
-            foreach (BaseUnit bu in activeUnits)
-            {
-                Debug.Log(bu.name + " agility: " + bu.agility);
-            }
-
-            Debug.Log("------");
-            currentUnit = activeUnits[0];
+            UnityEngine.Random.InitState(System.DateTime.Now.Millisecond);
+            return UnityEngine.Random.Range(min, max + 1);
         }
 
         void RunCombat()
@@ -338,6 +353,7 @@ namespace DeepFry
 
                         if (Input.GetKeyDown("e"))
                         {
+                            Debug.Log("In here now");
                             SetUnitForMenu();
 
                             foreach (Tile t in workingPTM.tempSelectableTiles)
@@ -430,6 +446,8 @@ namespace DeepFry
         {
             cineCam.enabled = true;
 
+            Debug.Log(currentUnit.name + " is current unit");
+
             if (cineCam.Follow != currentUnit.GetUnitObject().transform)
             {
                 cineCam.Follow = currentUnit.GetUnitObject().transform;
@@ -446,18 +464,93 @@ namespace DeepFry
             }
         }
 
-        void SetNextUnit()
-        {
-            activeUnits.Add(currentUnit);
-            activeUnits.RemoveAt(0);
-
-            // <--- can re-evaluate here if we want to add something to verify the unit order before setting next unit.
-            currentUnit = activeUnits[0];
-        }
-
         public void SetBattleState(battleStates newBattleState)
         {
             battleState = newBattleState;
+        }
+
+        void SetTurnOrder()
+        {
+            Debug.Log("------------ SETTING NEW TURN ORDER ------------");
+            turnQueue.Clear();
+
+            // bosses always get a free first turn every turn
+            foreach (BaseUnit unit in activeUnits)
+            {
+                Debug.Log(unit.name + " getting turn order set ");
+                Debug.Log(unit.GetUnitObject().name);
+                if (unit.unitType == unitTypes.ENEMY && unit.GetBaseEnemyUnit().boss)
+                {
+                    turnQueue.Enqueue(unit);
+                    Debug.Log("------------ TURN ORDER BOSS QUEUED ------------");
+                }
+            }
+            // ----------------------------------------------
+
+            // build temp list of active units
+            List<BaseUnit> tempList = activeUnits;
+
+            List<UnitTurnCalc> turnCalcs = new List<UnitTurnCalc>();
+
+            // agility should be multiplied by a value between 50% and 150%
+            // agility sets variability (1/2 of agility). so agility of 6 means its a value between 97% and 103%
+            // agility of 50 would mean value between 75% and 125%
+            foreach (BaseUnit unit in tempList)
+            {
+                // for each unit, perform a "roll" to get the above values and round that to nearest whole value
+                float tempRoll = 0;
+                float randMin = 100 - (unit.agility / 2); // 100 - agi/2 is min
+                float randMax = 100 + (unit.agility / 2); // 100 + agi/2 is max
+
+                tempRoll = Mathf.RoundToInt(GetRandomBetweenRange(randMin, randMax));
+
+                float roll = unit.agility * (tempRoll * .01f);
+
+                UnitTurnCalc utc = new UnitTurnCalc
+                {
+                    unit = unit,
+                    turnValue = roll
+                };
+
+                turnCalcs.Add(utc);
+            }
+
+            // at the end, sort them into a list by highest value first
+            turnCalcs = turnCalcs.OrderBy(x => x.turnValue).ToList();
+            turnCalcs.Reverse();
+
+            // for each unit in the list, enqueue them into the turn queue.
+
+            Debug.Log("------------ NEW TURN ORDER ------------");
+            for (int i = 0; i < turnCalcs.Count; i++)
+            {
+                Debug.Log(i + ") " + turnCalcs[i].unit.name + " with a roll of " + turnCalcs[i].turnValue.ToString());
+                turnQueue.Enqueue(turnCalcs[i].unit);
+            }
+
+            Debug.Log("------------------------------------");
+
+            Debug.Log("Setting first unit to " + turnQueue.Peek().name);
+            currentUnit = turnQueue.Peek();
+        }
+
+        void SetNextUnit()
+        {
+            if (turnQueue.Count > 0)
+            {
+                turnQueue.Dequeue();
+
+                if (turnQueue.Count == 0)
+                {
+                    SetTurnOrder();
+                } else
+                {
+                    currentUnit = turnQueue.Peek();
+                }                
+            } else
+            {
+                SetTurnOrder();
+            }
         }
     }    
 }

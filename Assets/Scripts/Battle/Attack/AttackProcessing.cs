@@ -50,7 +50,7 @@ public class AttackProcessing : MonoBehaviour
         ttp.currentMagic = null;
 
         // if any targets in range
-        if (TargetsInRange(currentPlayerUnit.GetEquippedWeapon().attackRange))
+        if (TargetsInRange(bpu, currentPlayerUnit.GetEquippedWeapon().attackRange))
         {
             bm.HideMenu(bm.mainMenu);
 
@@ -63,9 +63,9 @@ public class AttackProcessing : MonoBehaviour
         }
     }
 
-    private bool TargetsInRange(int range)
+    private bool TargetsInRange(BaseUnit homeUnit, int range)
     {
-        foreach (Tile tile in ttp.GetTargetTiles(range))
+        foreach (Tile tile in ttp.GetTargetTiles(homeUnit.GetTile(), range))
         {
             if (ttp.GetUnitOnTile(tile) != null && ttp.GetUnitOnTile(tile).unitType == unitTypes.ENEMY)
             {

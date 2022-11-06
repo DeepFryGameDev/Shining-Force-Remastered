@@ -10,10 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8896350b4ff419d4e9597ea05c7aff9b, type: 3}
-  m_Name: 01 ) Test Enemy
+  m_Name: 02 ) Test Boss
   m_EditorClassIdentifier: 
-  ID: 0
-  name: Test Gizmo
+  ID: 1
+  name: Test Gizmo Boss
   unitRace: 2
   level: 0
   attackRange: 1
@@ -21,11 +21,11 @@ MonoBehaviour:
   maxHP: 1
   MP: 0
   maxMP: 0
-  attack: 5
+  attack: 8
   defense: 5
   agility: 5
   move: 5
   learnedMagic: []
   items: []
-  unitPrefab: {fileID: 1329046361559213541, guid: 3802fc189f004c641a543f5cbc290b98, type: 3}
-  boss: 0
+  unitPrefab: {fileID: 1329046361559213541, guid: 8be59167a9f8b4b4eaf4aa2ae8f3f0c4, type: 3}
+  boss: 1
