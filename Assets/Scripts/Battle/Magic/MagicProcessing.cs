@@ -10,7 +10,10 @@ namespace DeepFry
         public BasePlayerUnit currentPlayerUnit;
 
         BattleMenu bm;
+        BattleStateMachine bsm;
         CombatInteraction ci;
+
+        AudioManager am;
 
         TileSelection ts;
         TileTargetProcessing ttp;
@@ -22,6 +25,9 @@ namespace DeepFry
             ttp = FindObjectOfType<TileTargetProcessing>();
             bm = FindObjectOfType<BattleMenu>();
             ci = FindObjectOfType<CombatInteraction>();
+            bsm = FindObjectOfType<BattleStateMachine>();
+
+            am = FindObjectOfType<AudioManager>();
         }
 
         // Update is called once per frame
@@ -48,13 +54,15 @@ namespace DeepFry
                 ttp.currentMagic = currentMagic;
             } else
             {
-                // cannot cast. play a SE or something
+                // cannot cast. play a SE
+                am.PlayUI(UISoundEffects.INVALIDACTION);
             }
         }
 
         void Egress()
         {
             Debug.Log(ts.targetUnit.name + " - Returning to last save point.");
+            bsm.DoPostBattleThings(0);
         }
 
         void Heal()
@@ -62,11 +70,9 @@ namespace DeepFry
             Debug.Log(ts.targetUnit.name + " recovers " + currentMagic.value + " HP.");
         }
 
-        public void ExecuteMagic()
+        public void PrepareMagic()
         {
             Debug.Log("Casting " + currentMagic.name + " on " + ts.targetUnit.name);
-
-            Invoke(FormatName(currentMagic.name), 0.0f);
 
             List<BaseUnit> newUnitList = new List<BaseUnit>();
             newUnitList.Add(ts.targetUnit);
@@ -78,6 +84,11 @@ namespace DeepFry
             ts.selectionCam.SetActive(false);
 
             PostMagicProcessing();
+        }
+
+        public void ExecuteMagic(string name)
+        {
+            Invoke(FormatName(name), 0.0f);
         }
 
         void PostMagicProcessing()

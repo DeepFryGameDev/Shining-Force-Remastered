@@ -15,8 +15,6 @@ MonoBehaviour:
   ID: 2
   name: Chester
   unitRace: 1
-  exp: 0
-  maxExp: 0
   level: 1
   unitClass: 2
   HP: 11
@@ -24,9 +22,10 @@ MonoBehaviour:
   MP: 0
   maxMP: 0
   attack: 8
-  defense: 5
-  agility: 7
+  defense: 6
+  agility: 4
   move: 7
   learnedMagic: []
-  items: []
+  items:
+  - {fileID: 11400000, guid: adb4f5e42c3a71244ae7086033263018, type: 2}
   unitPrefab: {fileID: 4700797944403510348, guid: f6c76f89ec542cd489bfdc360618bd7b, type: 3}

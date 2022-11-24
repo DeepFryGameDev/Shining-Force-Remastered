@@ -21,7 +21,7 @@ namespace DeepFry
         public IEnumerator MovePlayerUnit(Tile tarTile)
         {
             gameObject.GetComponent<PlayerMovement>().ToggleCanMove();
-            gameObject.GetComponent<PlayerMovement>().controller.enabled = false;
+            //gameObject.GetComponent<PlayerMovement>().controller.enabled = false;
 
             transform.LookAt(tarTile.transform.position);
 

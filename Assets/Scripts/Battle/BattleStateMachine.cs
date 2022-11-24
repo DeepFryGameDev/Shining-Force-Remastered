@@ -1,9 +1,10 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 using static UnityEngine.UI.CanvasScaler;
+using UnityEngine.SceneManagement;
 
 namespace DeepFry
 {
@@ -76,12 +77,12 @@ namespace DeepFry
 
         Queue<BaseUnit> turnQueue = new Queue<BaseUnit>();
 
+        bool bossEncounter;
+
         // Start is called before the first frame update
         void Start()
         {
             cineCam = FindObjectOfType<Cinemachine.CinemachineFreeLook>();
-                      
-            Init();
 
             TileMenuScripts.SetTileCoordinates();
 
@@ -99,6 +100,8 @@ namespace DeepFry
             selectModeReady = false;
             onLastTile = false;
             selectableTilesFound = false;
+
+            Init();
         }
 
         void Init()
@@ -119,14 +122,22 @@ namespace DeepFry
             foreach (BaseEnemyEncounter bee in BattleInit.enemyCombatants)
             {
                 //Instantiate them
+                Debug.Log(ts.GetTileAtCoords(bee.spawnCoordinates.x, bee.spawnCoordinates.y).name);
                 GameObject newObject = GameObject.Instantiate(bee.enemy.unitPrefab, 
-                    new Vector3(bee.spawnCoordinates.y, 0, bee.spawnCoordinates.x), 
-                    bee.enemy.unitPrefab.transform.rotation, GameObject.Find("[Enemy Units]").transform);
+                    new Vector3(bee.spawnCoordinates.y,
+                    ts.GetTileAtCoords(bee.spawnCoordinates.x, bee.spawnCoordinates.y).transform.position.y + 0.2f, // used to be 0
+                    bee.spawnCoordinates.x), 
+                    bee.enemy.unitPrefab.transform.rotation, GameObject.Find("[Enemy Units]").transform); 
 
                 foreach (BaseUnit unit in activeUnits)
                 {
                     if (unit.unitType == unitTypes.ENEMY && unit.battleID == bee.battleID)
                     {
+                        if (bee.enemy.boss)
+                        {
+                            bossEncounter = true;
+                        }
+
                         unit.SetUnitObject(newObject);
                         unit.GetUnitObject().GetComponent<TacticsMove>().unit = unit;
                         unit.GetUnitObject().GetComponent<EnemyTacticsMove>().enemyUnit = (BaseEnemyUnit)unit;
@@ -174,6 +185,16 @@ namespace DeepFry
                         Vector3 newRot = new Vector3(unit.GetUnitObject().transform.rotation.x, 0, unit.GetUnitObject().transform.rotation.z);
                         unit.GetUnitObject().transform.eulerAngles = newRot;
 
+                        foreach (BasePlayerUnit playerUnit in BattleInit.playerCombatants)
+                        {
+                            if (playerUnit.battleID == unit.battleID)
+                            {
+                                unit.GetUnitObject().GetComponent<PlayerUnitObject>().playerUnit = playerUnit;
+                                Debug.Log(playerUnit.name + " playerUnit set");
+                                break;
+                            }
+                        }
+
                         ToggleMovement(unit, false);
                         break;
                     }
@@ -197,10 +218,10 @@ namespace DeepFry
 
         void RunCombat()
         {
+            //Debug.Log(battleState);
             switch (battleState)
             {
                 case battleStates.BEGINTURN:
-
                     // Focus camera on currentUnit
                     SetCameraFocus();
 
@@ -217,8 +238,12 @@ namespace DeepFry
                             workingPTM = currentUnit.GetUnitObject().GetComponent<PlayerTacticsMove>();
 
                             workingPTM.GetCurrentTile();
+                            //Debug.Log("Current tile: " + workingPTM.currentTile.name);
+                            //Debug.Log("Last tile: " + workingPTM.currentTile.name);
                             workingPTM.lastTile = workingPTM.currentTile;
                             lastTile = workingPTM.lastTile;
+                            //Debug.Log("Current tile after: " + workingPTM.currentTile.name);
+                            //Debug.Log("Last tile after: " + workingPTM.currentTile.name);
 
                             mc.DrawCanvas((BasePlayerUnit)currentUnit, lastTile);
                             mc.ToggleMenu(true);
@@ -242,6 +267,8 @@ namespace DeepFry
                         // if enemy
                         if (currentUnit is BaseEnemyUnit)
                         {
+                            battleState = battleStates.DURINGTURN;
+
                             batCam.EnableCameraFreeLook(false);
                             workingETM = currentUnit.GetUnitObject().GetComponent<EnemyTacticsMove>();
                             // just simulate enemy taking a turn, wait a few seconds then proceed to player turn
@@ -253,7 +280,7 @@ namespace DeepFry
                             workingETM.Init();
                             workingETM.SetActualTargetTile();
 
-                            battleState = battleStates.DURINGTURN;
+                            //Debug.Log("Setting to during turn");                            
                         }
                     }
                     
@@ -275,33 +302,115 @@ namespace DeepFry
 
                     break;
                 case battleStates.ENDTURN:
-                    // if player
-                    if (currentUnit is BasePlayerUnit)
+                    // check if game over
+                    Debug.Log("Checking if game over");
+                    bool bossFound = false;
+                    bool enemyFound = false;
+
+                    if (bossEncounter)
+                    {                        
+                        foreach (BaseUnit unit in activeUnits)
+                        {
+                            if (unit.unitType == unitTypes.ENEMY && !bossFound)
+                            {
+                                foreach (BaseEnemyEncounter bee in BattleInit.enemyCombatants)
+                                {
+                                    if (bee.battleID == unit.battleID && bee.enemy.boss)
+                                    {
+                                        Debug.Log("Boss found. Moving on");
+                                        bossFound = true;
+                                        break;
+                                    } 
+                                }
+                            }
+                        }
+                    } else
                     {
-                        //currentUnit.GetUnitObject().GetComponent<Invector.vCharacterController.vThirdPersonInput>().enabled = false;
-                        bm.ResetForNewTurn();
-
-                        mc.ToggleMenu(false);
-
-                        workingPTM.lastTile = null;
-
-                        workingPTM.tempSelectableTiles.Clear();
-                        selectableTilesFound = false;
+                        foreach (BaseUnit unit in activeUnits)
+                        {
+                            if (unit.unitType == unitTypes.ENEMY)
+                            {
+                                Debug.Log("Enemies still exist. Moving on");
+                                enemyFound = true;
+                                break;
+                            }
+                        }
                     }
-                    // if enemy
-                    if (currentUnit is BaseEnemyUnit)
+
+                    if ((!bossEncounter && enemyFound) || (bossEncounter && bossFound)) // continue on
                     {
-                        workingETM.tempSelectableTiles.Clear();
+                        // if player
+                        if (currentUnit is BasePlayerUnit)
+                        {
+                            //currentUnit.GetUnitObject().GetComponent<Invector.vCharacterController.vThirdPersonInput>().enabled = false;
+                            bm.ResetForNewTurn();
+
+                            mc.ToggleMenu(false);
+
+                            workingPTM.lastTile = null;
+
+                            workingPTM.tempSelectableTiles.Clear();
+                            selectableTilesFound = false;
+                        }
+                        // if enemy
+                        if (currentUnit is BaseEnemyUnit)
+                        {
+                            workingETM.tempSelectableTiles.Clear();
+                        }
+
+                        SetNextUnit();
+                        battleState = battleStates.BEGINTURN;
+                    } else
+                    {
+                        Debug.Log("Battle over!");
+                        DoPostBattleThings(0);
                     }
 
-                    SetNextUnit();
-                    battleState = battleStates.BEGINTURN;
-
+                    //SetNextUnit();
                     break;
                 case battleStates.IDLE:
 
                     break;
             }
+        }
+
+        public void DoPostBattleThings(int sceneToLoad)
+        {
+            // save stats updated from the battle onto the DB units
+            List<BasePlayerUnit> tempUnits = new List<BasePlayerUnit>();
+            foreach (BaseUnit unit in activeUnits)
+            {
+                if (unit.unitType == unitTypes.PLAYER)
+                {
+                    if (unit.GetUnitObject() == null) // they died in battle
+                    {
+                        foreach (BasePlayerUnit bpu in DB.GameDB.activePlayerUnits)
+                        {
+                            if (bpu.battleID == unit.battleID)
+                            {
+                                BasePlayerUnit tempUnit = bpu;
+
+                                tempUnit.HP = 0;
+                                tempUnit.MP = tempUnit.maxMP;
+                                tempUnit.dead = true;
+
+                                tempUnits.Add(tempUnit);
+                                break;
+                            }
+                        }
+                    } else // they survived, fully heal them and save them to DB
+                    {
+                        unit.GetUnitObject().GetComponent<PlayerUnitObject>().playerUnit.HP = unit.GetUnitObject().GetComponent<PlayerUnitObject>().playerUnit.maxMP;
+                        unit.GetUnitObject().GetComponent<PlayerUnitObject>().playerUnit.MP = unit.GetUnitObject().GetComponent<PlayerUnitObject>().playerUnit.maxMP;
+                        tempUnits.Add(unit.GetUnitObject().GetComponent<PlayerUnitObject>().playerUnit);
+                    }                    
+                }
+            }
+
+            DB.GameDB.SetNewPlayerUnits(tempUnits);
+
+            // Load scene
+            SceneManager.LoadScene(sceneToLoad);
         }
 
         void ToggleMovement(BaseUnit unit, bool enable)
@@ -328,6 +437,7 @@ namespace DeepFry
 
                             // turn selection on
                             ts.selectMode = selectModes.PREPARATION;
+                            ts.tileSelectMode = tileSelectMode.CHECK;
                             ts.selectionOn = true;
 
                             mc.ToggleMenu(false);
@@ -341,6 +451,7 @@ namespace DeepFry
                                 workingPTM.transform.position.z == workingPTM.lastTile.transform.position.z && !onLastTile && !selectModeReady)
                         {
                             selectModeReady = true;
+                            Debug.Log("Select mode is ready");
 
                             // turn off selectable tiles
 
@@ -414,7 +525,7 @@ namespace DeepFry
         private void SetUnitForMenu()
         {
             turnState = turnStates.MENU;
-            bm.ShowMenu(bm.mainMenu, 2);
+            bm.ShowMenu(bm.mainMenu, 2, true);
 
             // turn off movement
             currentUnit.GetUnitObject().GetComponent<PlayerMovement>().ToggleCanMove();
@@ -446,7 +557,7 @@ namespace DeepFry
         {
             cineCam.enabled = true;
 
-            Debug.Log(currentUnit.name + " is current unit");
+            //Debug.Log(currentUnit.name + " is current unit");
 
             if (cineCam.Follow != currentUnit.GetUnitObject().transform)
             {
@@ -478,7 +589,6 @@ namespace DeepFry
             foreach (BaseUnit unit in activeUnits)
             {
                 Debug.Log(unit.name + " getting turn order set ");
-                Debug.Log(unit.GetUnitObject().name);
                 if (unit.unitType == unitTypes.ENEMY && unit.GetBaseEnemyUnit().boss)
                 {
                     turnQueue.Enqueue(unit);
@@ -497,6 +607,14 @@ namespace DeepFry
             // agility of 50 would mean value between 75% and 125%
             foreach (BaseUnit unit in tempList)
             {
+                if (unit.unitType == unitTypes.PLAYER)
+                {
+                    if (unit.GetUnitObject() == null)
+                    {
+                        continue; // skips over dead player units
+                    }
+                }
+
                 // for each unit, perform a "roll" to get the above values and round that to nearest whole value
                 float tempRoll = 0;
                 float randMin = 100 - (unit.agility / 2); // 100 - agi/2 is min
@@ -529,6 +647,8 @@ namespace DeepFry
             }
 
             Debug.Log("------------------------------------");
+            Debug.Log("--------------*-DONE-*--------------");
+            Debug.Log("------------------------------------");
 
             Debug.Log("Setting first unit to " + turnQueue.Peek().name);
             currentUnit = turnQueue.Peek();
@@ -536,6 +656,7 @@ namespace DeepFry
 
         void SetNextUnit()
         {
+            Debug.Log("Setting next unit");
             if (turnQueue.Count > 0)
             {
                 turnQueue.Dequeue();
@@ -551,6 +672,15 @@ namespace DeepFry
             {
                 SetTurnOrder();
             }
+        }
+        
+        public void RemoveFromTurnQueue(BaseUnit unit)
+        {
+            Queue<BaseUnit> tempQueue = turnQueue;
+
+            tempQueue = new Queue<BaseUnit>(tempQueue.Where(x => x.battleID != unit.battleID));
+
+            turnQueue = tempQueue;
         }
     }    
 }

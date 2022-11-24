@@ -22,6 +22,7 @@ namespace DeepFry
         BattleCamera batCam;
         MenuPrefabManager mpm;
         TileSelection ts;
+        AudioManager am;
 
         AttackProcessing ap;
 
@@ -41,6 +42,7 @@ namespace DeepFry
             batCam = FindObjectOfType<BattleCamera>();
             mpm = FindObjectOfType<MenuPrefabManager>();
             ts = FindObjectOfType<TileSelection>();
+            am = FindObjectOfType<AudioManager>();
 
             ap = FindObjectOfType<AttackProcessing>();
 
@@ -73,28 +75,32 @@ namespace DeepFry
                     {
                         if (Input.GetKeyDown("e"))
                         {
-                            Debug.Log("Here now");
                             Invoke(hoveredButton.GetComponent<MenuIconBehavior>().commandMethod, 0f);
+                            am.PlayUI(UISoundEffects.CONFIRM);
                         }
 
                         if (Input.GetKeyDown("w"))
                         {
                             SetHovered(topButton);
+                            am.PlayUI(UISoundEffects.HOVER);
                         }
 
                         if (Input.GetKeyDown("d"))
                         {
                             SetHovered(rightButton);
+                            am.PlayUI(UISoundEffects.HOVER);
                         }
 
                         if (Input.GetKeyDown("s"))
                         {
                             SetHovered(bottomButton);
+                            am.PlayUI(UISoundEffects.HOVER);
                         }
 
                         if (Input.GetKeyDown("a"))
                         {
                             SetHovered(leftButton);
+                            am.PlayUI(UISoundEffects.HOVER);
                         }
 
                         switch (menuState)
@@ -103,15 +109,15 @@ namespace DeepFry
                             case menuStates.MAIN:
                                 if (!buttonsSet)
                                 {
-                                    ShowMenu(mainMenu, 2);
+                                    ShowMenu(mainMenu, 2, true);
 
                                     buttonsSet = true;
                                 }
 
                                 if (Input.GetKeyDown("c"))
                                 {
-                                    //Debug.Log("Go back to movement phase");
-                                    HideMenu(mainMenu);
+                                    Debug.Log("Go back to movement phase");
+                                    HideMenu(mainMenu, true);
 
                                     commandNameText.text = "";
 
@@ -128,12 +134,12 @@ namespace DeepFry
                             case menuStates.ITEM:
                                 if (Input.GetKeyDown("c"))
                                 {
-                                    //Debug.Log("Go back to main menu");
-                                    HideMenu(mainMenu);
+                                    Debug.Log("Go back to main menu");
+                                    HideMenu(mainMenu, true);
 
                                     SetMainMenuButtons();
 
-                                    ShowMenu(mainMenu, 2);
+                                    ShowMenu(mainMenu, 2, true);
 
                                     menuState = menuStates.MAIN;
                                 }
@@ -142,12 +148,12 @@ namespace DeepFry
                             case menuStates.MAGIC:
                                 if (Input.GetKeyDown("c"))
                                 {
-                                    //Debug.Log("Go back to main menu");
-                                    HideMenu(magicItemMenu);
+                                    Debug.Log("Go back to main menu");
+                                    HideMenu(magicItemMenu, true);
 
                                     SetMainMenuButtons();
 
-                                    ShowMenu(mainMenu, 2);
+                                    ShowMenu(mainMenu, 2, true);
 
                                     menuState = menuStates.MAIN;
                                 }
@@ -170,7 +176,7 @@ namespace DeepFry
                                 itemMenuMode = itemMenuModes.IDLE;
                                 menuState = menuStates.ITEM;
 
-                                ShowMenu(mainMenu, 0);
+                                ShowMenu(mainMenu, 0, true);
                             }
                         }
                         
@@ -212,9 +218,9 @@ namespace DeepFry
                     mim.SetAndShowUnitItems(currentPlayerUnit);
                 }
                 
-                HideMenu(mainMenu);
-                HideMenu(magicItemMenu);
-                ShowMenu(magicItemMenu, 0);
+                HideMenu(mainMenu, true);
+                HideMenu(magicItemMenu, true);
+                ShowMenu(magicItemMenu, 0, true);
 
                 menuState = menuStates.ITEM;
                 mim.menuMode = MagicItemMenuModes.ITEM;
@@ -242,9 +248,9 @@ namespace DeepFry
 
         public void ItemButtonPressed()
         {
-            HideMenu(mainMenu);
+            HideMenu(mainMenu, true);
             SetItemMenuButtons();
-            ShowMenu(mainMenu, 0);
+            ShowMenu(mainMenu, 0, true);
 
             menuState = menuStates.ITEM;
         }
@@ -290,15 +296,18 @@ namespace DeepFry
         void MagicButtonPressed()
         {
             // Hide menu
-            HideMenu(mainMenu);
+            HideMenu(mainMenu, true);
 
             // Display learned magic abilities in UI
             ShowMagicMenu();
         }
 
-        public void HideMenu(GameObject menu)
+        public void HideMenu(GameObject menu, bool playSE)
         {
             Debug.Log("Hiding menu");
+
+            if (playSE)
+                am.PlayUI(UISoundEffects.CLOSEMENU);
 
             menu.GetComponent<Animator>().SetBool("menuOpened", false);
 
@@ -312,10 +321,13 @@ namespace DeepFry
             menuOpen = false;
         }
 
-        public void ShowMenu(GameObject menu, int defaultHoveredButton)
+        public void ShowMenu(GameObject menu, int defaultHoveredButton, bool playSE)
         {
             // play open menu animation
             menu.GetComponent<Animator>().SetBool("menuOpened", true);
+
+            if (playSE)
+                am.PlayUI(UISoundEffects.OPENMENU);
 
             buttonsSet = false;
 
@@ -359,7 +371,7 @@ namespace DeepFry
 
         public void EndTurn()
         {
-            HideMenu(mainMenu);
+            HideMenu(mainMenu, true);
 
             commandNameText.text = "";
 

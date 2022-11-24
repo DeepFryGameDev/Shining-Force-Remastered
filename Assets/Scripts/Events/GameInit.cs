@@ -11,19 +11,17 @@ namespace DeepFry
             GenerateStartingUnits();
         }
 
-        private void GenerateStartingUnits()
+        private void Update()
         {
-            foreach (PlayerUnitSO puSO in DB.GameDB.allPlayerUnits)
-            {
-                Debug.Log("-~-~-~- " + puSO.name + " added to active player units. -~-~-~-");
-                DB.GameDB.activePlayerUnits.Add(puSO.GetPlayerUnit());
-            }
+
         }
 
-        // Update is called once per frame
-        void Update()
+        private void GenerateStartingUnits()
         {
-
+            if (!DB.GameDB.dbInitialized)
+            {
+                DB.GameDB.SetInitialPlayerUnits(DB.GameDB.allPlayerUnits);
+            }     
         }
     }
 }

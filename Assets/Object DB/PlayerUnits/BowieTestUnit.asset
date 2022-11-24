@@ -15,8 +15,6 @@ MonoBehaviour:
   ID: 0
   name: Bowie Lol
   unitRace: 0
-  exp: 0
-  maxExp: 0
   level: 1
   unitClass: 0
   HP: 7
@@ -25,7 +23,7 @@ MonoBehaviour:
   maxMP: 8
   attack: 9
   defense: 4
-  agility: 6
+  agility: 7
   move: 6
   learnedMagic:
   - {fileID: 11400000, guid: 67413879a23f8b844be36a210d6a1606, type: 2}

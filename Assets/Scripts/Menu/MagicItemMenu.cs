@@ -34,6 +34,7 @@ namespace DeepFry
 
         MagicProcessing mp;
         ItemProcessing ip;
+        AudioManager am;
 
         BattleMenu bm;
 
@@ -54,6 +55,7 @@ namespace DeepFry
 
             mp = FindObjectOfType<MagicProcessing>();
             ip = FindObjectOfType<ItemProcessing>();
+            am = FindObjectOfType<AudioManager>();
 
             bm = FindObjectOfType<BattleMenu>();
 
@@ -173,24 +175,28 @@ namespace DeepFry
             {
                 hoveredButtonVal = 0;
                 SetHighlight();
+                am.PlayUI(UISoundEffects.HOVER);
             }
 
             if (Input.GetKeyDown("d") && (rightMIB.GetItem() != null || rightMIB.GetMagic() != null))
             {
                 hoveredButtonVal = 1;
                 SetHighlight();
+                am.PlayUI(UISoundEffects.HOVER);
             }
 
             if (Input.GetKeyDown("s") && (bottomMIB.GetItem() != null || bottomMIB.GetMagic() != null))
             {
                 hoveredButtonVal = 2;
                 SetHighlight();
+                am.PlayUI(UISoundEffects.HOVER);
             }
 
             if (Input.GetKeyDown("a") && (leftMIB.GetItem() != null || leftMIB.GetMagic() != null))
             {
                 hoveredButtonVal = 3;
                 SetHighlight();
+                am.PlayUI(UISoundEffects.HOVER);
             }
 
             if (Input.GetKeyDown("c"))
@@ -322,20 +328,63 @@ namespace DeepFry
             switch (hoveredButtonVal)
             {
                 case 0:
-                    highlightBorder = topBorder;                    
-                    menuText.text = topMIB.GetItem().name;
+                    highlightBorder = topBorder;    
+                    if (topMIB.GetItem() != null)
+                    {
+                        menuText.text = topMIB.GetItem().name;
+                    } else if (topMIB.GetMagic() != null)
+                    {
+                        menuText.text = topMIB.GetMagic().name;
+                    } else
+                    {
+                        menuText.text = String.Empty;
+                    }
+                    
                     break;
                 case 1:
                     highlightBorder = rightBorder;
-                    menuText.text = rightMIB.GetItem().name;
+                    if (rightMIB.GetItem() != null)
+                    {
+                        menuText.text = rightMIB.GetItem().name;
+                    }
+                    else if (rightMIB.GetMagic() != null)
+                    {
+                        menuText.text = rightMIB.GetMagic().name;
+                    }
+                    else
+                    {
+                        menuText.text = String.Empty;
+                    }
                     break;
                 case 2:
                     highlightBorder = bottomBorder;
-                    menuText.text = bottomMIB.GetItem().name;
+                    if (bottomMIB.GetItem() != null)
+                    {
+                        menuText.text = bottomMIB.GetItem().name;
+                    }
+                    else if (bottomMIB.GetMagic() != null)
+                    {
+                        menuText.text = bottomMIB.GetMagic().name;
+                    }
+                    else
+                    {
+                        menuText.text = String.Empty;
+                    }
                     break;
                 case 3:
                     highlightBorder = leftBorder;
-                    menuText.text = leftMIB.GetItem().name;
+                    if (leftMIB.GetItem() != null)
+                    {
+                        menuText.text = leftMIB.GetItem().name;
+                    }
+                    else if (leftMIB.GetMagic() != null)
+                    {
+                        menuText.text = leftMIB.GetMagic().name;
+                    }
+                    else
+                    {
+                        menuText.text = String.Empty;
+                    }
                     break;
             }
 
@@ -366,14 +415,14 @@ namespace DeepFry
         public void HideMenu()
         {
             //Debug.Log("Hiding menu");
-            bm.HideMenu(gameObject);
+            bm.HideMenu(gameObject, true);
 
             menuOpen = false;
         }
 
         public void ShowMenu()
         {
-            bm.ShowMenu(gameObject, 0);
+            bm.ShowMenu(gameObject, 0, true);
             menuOpen = true;
         }
     }

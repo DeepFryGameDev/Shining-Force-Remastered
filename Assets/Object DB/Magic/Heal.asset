@@ -16,7 +16,7 @@ MonoBehaviour:
   name: Heal
   magicType: 0
   mpCost: 3
-  targetRange: 1
+  targetRange: 2
   effectRange: 0
   value: 10
   levelsToUpgrade: 

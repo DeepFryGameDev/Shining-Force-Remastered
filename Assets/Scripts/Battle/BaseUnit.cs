@@ -67,13 +67,15 @@ namespace DeepFry
                 Debug.LogError("NULL");
             }
 
-            if (Physics.Raycast(unitObject.transform.position, -Vector3.up, out hit, Mathf.Infinity, tileLayer))
+            Vector3 tempPos = new Vector3(unitObject.transform.position.x, unitObject.transform.position.y - 50f, unitObject.transform.position.z);
+
+            if (Physics.Raycast(tempPos, Vector3.up, out hit, Mathf.Infinity, tileLayer))
             {
                 //Debug.Log("Hit collider: " + hit.collider.gameObject.name);
                 tile = hit.collider.GetComponent<Tile>();
             }
 
-            //if (!tile) Debug.LogWarning("GetTileAtPos: No tile found at position " + position);
+            //if (!tile) Debug.LogWarning("GetTileAtPos: No tile found at position " + tempPos);
 
             return tile;
         }

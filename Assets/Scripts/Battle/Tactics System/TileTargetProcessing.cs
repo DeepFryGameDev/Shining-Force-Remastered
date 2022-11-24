@@ -78,7 +78,7 @@ namespace DeepFry
 
         public List<Tile> GetTargetTiles(Tile anchorTile, int range) // For getting target tiles
         {
-            Debug.Log("Getting target tiles from " + anchorTile.name + " for range: " + range);
+            //Debug.Log("Getting target tiles from " + anchorTile.name + " for range: " + range);
 
             List<Tile> tiles = new List<Tile>();
             float x = anchorTile.transform.position.z;
@@ -201,7 +201,30 @@ namespace DeepFry
 
             // set a new variable on TileSelection to the nearest available target. use that when moving camera.
             ts.selectionOn = true;
+            ts.tileSelectMode = tileSelectMode.ACTION;
             ts.targetMode = targetModes.PREPARATION; //(when ready, uncomment)
+        }
+
+        public IEnumerator SimulateTileSelection(BaseUnit unit)
+        {
+            //ttp.BeginTileSelectForAction();
+            //ttp.currentBTT = ttp.GetBaseTileTarget(enemyUnit);
+
+            ts.SetTileSelectCursorPos(unit.GetTile());
+            ts.ToggleTileSelectCursor(true);
+
+            ts.selectionCam.transform.position = ts.mainCam.transform.position;
+            ts.selectionCam.transform.rotation = ts.mainCam.transform.rotation;
+
+            ts.selectionCam.SetActive(true);
+            ts.gameCam.SetActive(false);
+            ts.mainCam.SetActive(false);
+
+            yield return StartCoroutine(ts.MoveCamera(ts.selectionCam, unit.GetTile()));
+
+            ts.ToggleTileSelectCursor(false);
+
+            Debug.Log("Continue");
         }
 
         public Tile GetTileAtPos(Vector3 position)
@@ -224,12 +247,13 @@ namespace DeepFry
         {
             RaycastHit[] hits;
 
-            Vector3 posToTry = new Vector3(tile.transform.position.x, 1, tile.transform.position.z);
+            Vector3 posToTry = new Vector3(tile.transform.position.x, 0, tile.transform.position.z);
 
-            hits = Physics.RaycastAll(posToTry, Vector3.down, 5.0f);
+            hits = Physics.RaycastAll(posToTry, Vector3.up, 5.0f);
 
             for (int i = 0; i < hits.Length; i++)
             {
+                //Debug.Log("Hit: " + hits[i].collider.gameObject.name);
                 if (hits[i].collider.CompareTag("PlayerUnit"))
                 {
                     return hits[i].collider.GetComponent<TacticsMove>().unit;

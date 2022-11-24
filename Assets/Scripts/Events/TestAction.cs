@@ -26,7 +26,7 @@ namespace DeepFry
                 Debug.Log("Start battle");
                 Debug.Log("---");
 
-                BattleInit.InitializeBattle(enemyList);
+                BattleInit.InitializeBattle(enemyList, 1);
             }
         }
     }

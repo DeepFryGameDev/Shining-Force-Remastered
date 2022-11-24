@@ -13,6 +13,8 @@ public class AttackProcessing : MonoBehaviour
     TileSelection ts;
     TileTargetProcessing ttp;
 
+    AudioManager am;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -20,6 +22,8 @@ public class AttackProcessing : MonoBehaviour
         ttp = FindObjectOfType<TileTargetProcessing>();
         bm = FindObjectOfType<BattleMenu>();
         ci = FindObjectOfType<CombatInteraction>();
+
+        am = FindObjectOfType<AudioManager>();
     }
 
     // Update is called once per frame
@@ -49,10 +53,12 @@ public class AttackProcessing : MonoBehaviour
         ttp.currentItem = null;
         ttp.currentMagic = null;
 
+        Debug.Log(currentPlayerUnit.name + " equipped weapon: " + currentPlayerUnit.GetEquippedWeapon().name);
+
         // if any targets in range
         if (TargetsInRange(bpu, currentPlayerUnit.GetEquippedWeapon().attackRange))
         {
-            bm.HideMenu(bm.mainMenu);
+            bm.HideMenu(bm.mainMenu, true);
 
             ttp.BeginTileSelectForAction();
             ttp.currentBTT = ttp.GetBaseTileTarget(currentPlayerUnit);
@@ -60,6 +66,7 @@ public class AttackProcessing : MonoBehaviour
         else // else, play error SE and message 'no targets available'
         {
             Debug.Log("No targets in range");
+            am.PlayUI(UISoundEffects.INVALIDACTION);
         }
     }
 

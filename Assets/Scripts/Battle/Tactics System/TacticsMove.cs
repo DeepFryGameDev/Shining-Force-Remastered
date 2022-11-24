@@ -52,7 +52,7 @@ namespace DeepFry
         protected NavMeshAgent agent;
         protected Animator anim;
 
-        BattleStateMachine bsm;
+        protected BattleStateMachine bsm;
 
         public void Init()
         {
@@ -79,8 +79,11 @@ namespace DeepFry
         {
             RaycastHit hit;
             Tile tile = null;
+            Vector3 tempPos = new Vector3(target.transform.position.x, target.transform.position.y - 50f, target.transform.position.z);
 
-            if (Physics.Raycast(target.transform.position, -Vector3.up, out hit, Mathf.Infinity, tileLayer))
+            //Debug.Log("Checking for tile at " + tempPos + " and going 'up' by 'infinity'.");
+
+            if (Physics.Raycast(tempPos, Vector3.up, out hit, Mathf.Infinity, tileLayer))
             {
                 //Debug.Log("Hit collider: " + hit.collider.gameObject.name);
                 tile = hit.collider.GetComponent<Tile>();

@@ -10,15 +10,18 @@ public enum PlayerUnitClasses
 
 namespace DeepFry 
 {
+    [System.Serializable]
     public class BasePlayerUnit : BaseUnit
     {
         public PlayerUnitClasses unitClass;
 
-        public int exp, maxExp;
+        public int exp;
 
         public MagicSO[] learnedMagicSOs;
 
         public List<BaseItem> inventory = new List<BaseItem>();
+
+        public bool dead;
 
         BaseEquipment equippedWeapon;
         BaseEquipment equippedArmor;
@@ -54,13 +57,14 @@ namespace DeepFry
                     EquipWeapon(DB.GameDB.GetEquipmentItem(2));
                     break;
                 case 2:  //Chester
-
+                    EquipWeapon(DB.GameDB.GetEquipmentItem(3));
                     break;
             }
         }
 
         public void EquipWeapon(BaseEquipment equip)
         {
+            Debug.Log(name + " equipped " + equip.name);
             UnequipWeapon();
             equippedWeapon = equip;
 
@@ -93,6 +97,18 @@ namespace DeepFry
                     inventory.RemoveAt(i);
                 }
             }
+        }
+
+        public void GainEXP(int expGained)
+        {
+            exp += expGained;
+        }
+
+        public void Levelup()
+        {
+            exp -= 100; // need to adjust magic number
+            level++;
+            // to add in the future - check for any new magic to be learned here
         }
 
         public bool HasInventorySpace()

@@ -55,10 +55,10 @@ namespace DeepFry
 
             //StartCoroutine(MoveUnit(actualTargetTile));
 
-            StartCoroutine(MoveUnit(GetTargetTile()));
+            StartCoroutine(MoveUnit(GetTargetTile(actualTargetTile)));
         }
 
-        Tile GetTargetTile()
+        Tile GetTargetTile(Tile anchorTile)
         {
             //Debug.Log("Trying to get actual target tile from origin tile: " + originTile.name);
 
@@ -82,33 +82,37 @@ namespace DeepFry
                 {
                     Debug.Log("Aggression >= 9 - Return a tile toward target within 1 or 2 tiles");
                     rand = GetRandomBetweenRange(1, 2);
-                    return GetTileAlongPath(rand);
+                    return GetTileAlongPath(rand, anchorTile);
                 }
-            } else if (aggression <= 1) // aggression * 10% chance to move random amount of tiles in random direction
+            } else if (aggression >= 1) // aggression * 10% chance to move random amount of tiles in random direction
             {                
                 int rand = GetRandomBetweenRange(1, 100);
                 Debug.Log("Aggression <= 1 - Random chance to move random amount of tiles: " + rand);
 
                 if (rand <= (aggression * 10)) // Aggression <= 1 - Return 1 or 2 tiles away in a random direction
                 {
+                    //Debug.Log("Returning a random tile");
                     rand = GetRandomBetweenRange(1, 2); // modify this at some point for small random moves (magic numbers)
                     return GetRandomTileFromCurrent(rand);
                 }
                 else // Aggression <= 1 - Return a tile toward target within movement
                 {
+                    //Debug.Log("Returning tile toward target");
                     rand = GetRandomBetweenRange(1, 2);
-                    return GetTileAlongPath(rand);
+                    return GetTileAlongPath(rand, anchorTile);
                 }
             } else // within attack range - return target's tile
             {
-                return targetUnit.GetTile();
+                Debug.Log("Returning actualTargetTile");
+                return actualTargetTile; // needs to return closest tile within attack range
             }
         }
 
-        Tile GetTileAlongPath(int spaces)
+        Tile GetTileAlongPath(int spaces, Tile tile)
         {
             int count = 0;
-            GetNumberOfTilesToTarget(targetUnit.GetTile());
+            //GetNumberOfTilesToTarget(targetUnit.GetTile());
+            GetNumberOfTilesToTarget(tile);
             foreach (Tile t in pathToTargetTile)
             {
                 count++;
@@ -128,11 +132,13 @@ namespace DeepFry
             Vector3 curTilePos = unit.GetTile().transform.position;
             Tile tempTile = unit.GetTile();
 
+            Debug.Log("Getting random tile from " + tempTile.name);
+
             for (int i = 0; i < spaces; i++)
             {
                 bool found = false;
                 RaycastHit[] hits = null;
-                Vector3 posToTry = new Vector3(tempTile.transform.position.x, -0.045f, tempTile.transform.position.z);
+                Vector3 posToTry = new Vector3(tempTile.transform.position.x, tempTile.transform.position.y, tempTile.transform.position.z);
 
                 while (!found)
                 {
@@ -218,15 +224,27 @@ namespace DeepFry
 
         IEnumerator MoveUnit(Tile tarTile)
         {
-            Vector3 navMeshTargetPos = new Vector3(tarTile.transform.position.x, 0, tarTile.transform.position.z);
+            //Debug.Log("Moving to " + tarTile.name);
+            Vector3 navMeshTargetPos = new Vector3(tarTile.transform.position.x, 
+                tarTile.transform.position.y + .02f,
+                tarTile.transform.position.z);
 
             anim.SetBool("flyForward", true);
 
             agent.SetDestination(navMeshTargetPos);
 
-            while (Vector3.Distance(transform.position, navMeshTargetPos) > tileStoppingDistance)
+            /*while (Vector3.Distance(transform.position, navMeshTargetPos) > tileStoppingDistance)
             {
-                //Debug.Log("Distance: " + Vector3.Distance(transform.position, navMeshTargetPos));
+                Debug.Log("Distance: " + Vector3.Distance(transform.position, navMeshTargetPos));
+                yield return new WaitForEndOfFrame();
+            }*/
+            while (transform.position.x != tarTile.transform.position.x)
+            {
+                yield return new WaitForEndOfFrame();
+            }
+
+            while (transform.position.z != tarTile.transform.position.z)
+            {
                 yield return new WaitForEndOfFrame();
             }
 
@@ -235,25 +253,34 @@ namespace DeepFry
             agent.isStopped = true;
             agent.velocity = new Vector3(0, 0, 0);
             agent.ResetPath();
-            transform.position = new Vector3(navMeshTargetPos.x, transform.position.y, navMeshTargetPos.z);            
+            //transform.position = new Vector3(navMeshTargetPos.x, transform.position.y, navMeshTargetPos.z);            
 
             StartCoroutine(PostMove());
         }
 
         IEnumerator PostMove()
         {
+            Debug.Log("In here");
+
             // Check if targets in range (get number of tiles traversed to target tile, and verify that tile is within monster's reach)
             List<Tile> targetTiles = ttp.GetTargetTiles(unit.GetTile(), enemyUnit.attackRange);
-            
+
+            Debug.Log("In here 2");
             List<BaseUnit> targetList = new List<BaseUnit>();
             targetList.Add(targetUnit); // <--- this and the line above will need to be adjusted
 
+            Debug.Log("In here 3");
+            bool startedCombat = false;
+
             foreach (Tile tile in targetTiles)
             {
+                Debug.Log("In here 4");
                 if (ttp.GetUnitOnTile(tile) == targetUnit)
                 {
                     // prepare combat
-                    StartCoroutine(PrepareCombatInteraction(targetList));
+                    Debug.Log("In here 5");
+                    startedCombat = true;
+                    yield return PrepareCombatInteraction(targetList);
 
                     break;
                 }
@@ -261,23 +288,28 @@ namespace DeepFry
 
             while (ci.interactionStarted)
             {
+                Debug.Log("In here 6");
                 yield return new WaitForEndOfFrame();
-            }        
+            }
 
             // Then end turn
-            GameObject.FindObjectOfType<BattleStateMachine>().battleState = battleStates.ENDTURN;
+            Debug.Log("In here 7");
+            Debug.Log(startedCombat + " - " + bsm.battleState);
+            if (!startedCombat) bsm.battleState = battleStates.ENDTURN;
+            Debug.Log(startedCombat + " - " + bsm.battleState);
         }
         IEnumerator PrepareCombatInteraction(List<BaseUnit> targetList)
         {
             yield return new WaitForSeconds(1); // allows camera to move and settle on unit - this will be adjusted
 
             // simulate tile selection going to target.
-            ts.targetUnit = targetUnit;
+            //ts.targetUnit = targetUnit;
 
-            ttp.BeginTileSelectForAction();
-            ttp.currentBTT = ttp.GetBaseTileTarget(enemyUnit);
+            //ttp.BeginTileSelectForAction();
+            //ttp.currentBTT = ttp.GetBaseTileTarget(enemyUnit);
 
-            yield return new WaitForSeconds(2);            
+            // yield return simulate for enemyUnit
+            yield return ttp.SimulateTileSelection(targetList[0]);
 
             ts.targetMode = targetModes.IDLE;
             ts.SetSelectableTiles(false);

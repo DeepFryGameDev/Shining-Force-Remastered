@@ -15,14 +15,12 @@ MonoBehaviour:
   ID: 1
   name: Sarah
   unitRace: 0
-  exp: 0
-  maxExp: 0
   level: 1
   unitClass: 1
-  HP: 5
-  maxHP: 11
-  MP: 10
-  maxMP: 10
+  HP: 20
+  maxHP: 20
+  MP: 5
+  maxMP: 5
   attack: 9
   defense: 5
   agility: 4

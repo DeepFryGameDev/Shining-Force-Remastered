@@ -9,7 +9,7 @@ public class PlayerUnitSO : ScriptableObject
 
     public unitRaces unitRace;
 
-    public int exp, maxExp, level;
+    public int level;
 
     public PlayerUnitClasses unitClass;
 
@@ -34,8 +34,7 @@ public class PlayerUnitSO : ScriptableObject
             unitRace = unitRace,
 
             level = level,
-            exp = exp,
-            maxExp = maxExp,
+            exp = 99,
 
             learnedMagicSOs = learnedMagic,
 

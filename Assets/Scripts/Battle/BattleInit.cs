@@ -13,19 +13,19 @@ namespace DeepFry
 
         static int battleIDIndex;
 
-        public static void InitializeBattle(List<BaseEnemyEncounter> enemyUnits)
+        public static void InitializeBattle(List<BaseEnemyEncounter> enemyUnits, int sceneIndex)
         {
             InitPlayerUnits(DB.GameDB.activePlayerUnits);
             InitEnemyUnits(enemyUnits);
 
-            InitField();
+            InitField(sceneIndex);
         }
 
-        static void InitField()
+        static void InitField(int sceneIndex)
         {
             Debug.Log("Initializing Field");
 
-            SceneManager.LoadScene("Battleground");
+            SceneManager.LoadScene(sceneIndex);
         }
 
         static void InitPlayerUnits(List<BasePlayerUnit> playerUnits)

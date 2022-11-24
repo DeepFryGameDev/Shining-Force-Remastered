@@ -1,8 +1,10 @@
+using Cinemachine;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 using Random = UnityEngine.Random;
 
@@ -35,6 +37,8 @@ namespace DeepFry
 
         bool messageStarted, messageInterrupt;
 
+        MagicProcessing mp;
+
         MoveCanvas mc;
         BattleMenu bm;
 
@@ -48,6 +52,8 @@ namespace DeepFry
             bsm = FindObjectOfType<BattleStateMachine>();
 
             am = FindObjectOfType<AudioManager>();
+
+            mp = FindObjectOfType<MagicProcessing>();
         }
 
         // Update is called once per frame
@@ -124,16 +130,19 @@ namespace DeepFry
             ts.mainCam.SetActive(true);
             ts.selectionCam.SetActive(false);
 
+            // workaround for now
+            ts.ToggleBrain(false);
+
             ts.ToggleTileSelectCursor(false);
 
             combatInteraction.primaryUnit.GetUnitObject().transform.LookAt(combatInteraction.targetUnits[0].GetUnitObject().transform);
 
             if (combatInteraction.primaryUnit.unitType == unitTypes.PLAYER)
             {
-                am.PlayMusic(am.heroFightTheme);
+                am.PlayBattleMusic(BattleThemes.PLAYERFIGHT);
             } else
             {
-                am.PlayMusic(am.enemyFightTheme);
+                am.PlayBattleMusic(BattleThemes.ENEMYFIGHT);
             }
 
             StartCoroutine(RunCombatInteraction());
@@ -152,20 +161,16 @@ namespace DeepFry
 
             ShowDetailsPanel(true);
 
-            StartCoroutine(ts.MoveCamera(ts.mainCam, combatInteraction.primaryUnit));
+            Debug.Log("1) Moving camera to primary unit");
+            StartCoroutine(ts.ZoomToUnit(ts.mainCam, true));
 
-            Debug.Log("1");
+            yield return StartCoroutine(ts.MoveCameraCombat(ts.mainCam, combatInteraction.primaryUnit));
 
-            yield return StartCoroutine(ts.ZoomToUnit(ts.mainCam, true));
-
-            Debug.Log("2");
-
+            Debug.Log("Done moving camera");
             #endregion
 
             #region Stage 2 - Display opening combat message in UI (**Modular**)
             // display first message -------------------------------------------------------------------------------------
-
-            Debug.Log("3");
 
             switch (combatInteraction.interactionType)
             {
@@ -249,6 +254,9 @@ namespace DeepFry
                             case MagicTypes.HEAL:
                                 effectValue = GetHealedAmount(unit, combatInteraction.magicUsed.value);
                                 break;
+                            case MagicTypes.MISC:
+                                mp.ExecuteMagic(combatInteraction.magicUsed.name);
+                                break;
                         }
                         break;
                     case CombatInteractionTypes.ITEM:
@@ -271,7 +279,8 @@ namespace DeepFry
 
                 UpdateUnitUI(unit);
 
-                yield return StartCoroutine(ts.MoveCamera(ts.mainCam, unit));
+                Debug.Log("2) Moving camera to target unit");
+                yield return StartCoroutine(ts.MoveCameraCombat(ts.mainCam, unit));
 
                 #endregion
 
@@ -397,7 +406,8 @@ namespace DeepFry
             // zoom camera and show unit details for primary unit --------------------------------------------------------
             UpdateUnitUI(combatInteraction.primaryUnit);
 
-            StartCoroutine(ts.MoveCamera(ts.mainCam, combatInteraction.primaryUnit));
+            Debug.Log("3) Moving camera back to primary unit");
+            StartCoroutine(ts.MoveCameraCombat(ts.mainCam, combatInteraction.primaryUnit));
 
             // set animations back to idle
             switch (combatInteraction.interactionType)
@@ -420,7 +430,13 @@ namespace DeepFry
                 yield return StartCoroutine(DisplayMessage(message, messageDelay)); // yield until message is completed (or button pressed)
                 #endregion
 
-            #region Stage 13 - Fade back into gameplay (No need for modularity)
+                #region Stage 13 - Process EXP (No need for modularity)
+                // get base player and increase exp
+                StartCoroutine(ProcessExp(totalEXP));
+
+                #endregion
+
+                #region Stage 14 - Fade back into gameplay (No need for modularity)
 
                 // fade back into gameplay     
                 yield return StartCoroutine(ts.ZoomToUnit(ts.mainCam, false));
@@ -428,25 +444,52 @@ namespace DeepFry
 
             #endregion
 
-            #region Stage 14 - Clean up (No need for modularity)
+            #region Stage 15 - Clean up (No need for modularity)
 
             CleanUpCombatInteraction();
 
             #endregion
         }
 
+        private IEnumerator ProcessExp(int totalEXP)
+        {
+            BasePlayerUnit bpu = combatInteraction.primaryUnit.GetUnitObject().GetComponent<PlayerUnitObject>().playerUnit;
+            bpu.GainEXP(totalEXP);
+
+            if (bpu.exp >= 100) // magic number, will need to adjust
+            {
+                // leveled up
+                bpu.Levelup();
+
+                string message = combatInteraction.primaryUnit.name + " became level " + bpu.level + "!";
+                yield return StartCoroutine(DisplayMessage(message, messageDelay)); // yield until message is completed (or button pressed)
+            }
+        }
+
         private IEnumerator ProcessDeath(BaseUnit unit)
         {
             // show death animation
             unit.GetUnitObject().GetComponent<Animator>().SetTrigger("death");
+            // remove from queue
+            bsm.RemoveFromTurnQueue(unit);
+
+            if (unit.unitType == unitTypes.PLAYER)
+            {
+                unit.GetUnitObject().GetComponent<PlayerUnitObject>().playerUnit.dead = true;
+            }
+            else
+            {
+                // remove from active units
+                bsm.activeUnits.Remove(unit);
+            }
+
             // destroy unit
             StartCoroutine(DestroyUnitObject(unit, 3));
             yield return StartCoroutine(DisplayMessage(unit.name + " was defeated!", messageDelay));
         }
 
         IEnumerator DestroyUnitObject(BaseUnit unit, float waitTime)
-        {
-            bsm.activeUnits.Remove(unit);
+        {            
             yield return new WaitForSeconds(waitTime);
             Destroy(unit.GetUnitObject());            
             Debug.Log(unit.name + " removed from battle.");
@@ -503,7 +546,7 @@ namespace DeepFry
             GameObject newSpellEffect = Instantiate(magic.effectPrefab, target.transform.position, Quaternion.identity, GameObject.Find("[Effects]").transform);
 
             if (playAudio)
-                am.PlaySE(magic.effectAudio);
+                am.PlayEffect(magic.effectAudio);
 
             // while spell effect is still going
             yield return new WaitForSeconds(magic.effectPrefab.GetComponent<MagicEffect>().lifetime);
@@ -757,8 +800,11 @@ namespace DeepFry
 
             // hide combat interaction UI
             ClearMessageText();
+            ts.ToggleBrain(true);
 
-            am.PlayMusic(am.battleTheme);
+            ts.gameCam.SetActive(true);
+
+            am.PlayBattleMusic(BattleThemes.BATTLE);
 
             Debug.Log("Go to next turn.");
 
